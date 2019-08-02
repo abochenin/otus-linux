@@ -1,7 +1,7 @@
-# Миграция на raid1 centos7
+# ╨Ь╨╕╨│╤А╨░╤Ж╨╕╤П ╨╜╨░ raid1 centos7
 
 
-#Имеем конфигурацию и начальное состояние
+#╨Ш╨╝╨╡╨╡╨╝ ╨║╨╛╨╜╤Д╨╕╨│╤Г╤А╨░╤Ж╨╕╤О ╨╕ ╨╜╨░╤З╨░╨╗╤М╨╜╨╛╨╡ ╤Б╨╛╤Б╤В╨╛╤П╨╜╨╕╨╡
 [root@otuslinux vagrant]# lsblk
 NAME   MAJ:MIN RM SIZE RO TYPE MOUNTPOINT
 sda      8:0    0  40G  0 disk
@@ -13,11 +13,11 @@ sdb      8:16   0  40G  0 disk
 /0/100/1.1/0.1.0    /dev/sdb   disk        42GB VBOX HARDDISK
 
 
-# Размечаем /dev/sdb
+# ╨а╨░╨╖╨╝╨╡╤З╨░╨╡╨╝ /dev/sdb
 [root@otuslinux vagrant]# sfdisk -d /dev/sda |sfdisk /dev/sdb
 
 
-# меняем тип раздела на FD, linux raid с помощью fdisk или parted
+# ╨╝╨╡╨╜╤П╨╡╨╝ ╤В╨╕╨┐ ╤А╨░╨╖╨┤╨╡╨╗╨░ ╨╜╨░ FD, linux raid ╤Б ╨┐╨╛╨╝╨╛╤Й╤М╤О fdisk ╨╕╨╗╨╕ parted
 Disk /dev/sdb: 42.9 GB, 42949672960 bytes, 83886080 sectors
 Units = sectors of 1 * 512 = 512 bytes
 Sector size (logical/physical): 512 bytes / 512 bytes
@@ -32,7 +32,7 @@ Command (m for help): w
 The partition table has been altered!
 
 
-# Создаем зеркало без одного элемента (missing)
+# ╨б╨╛╨╖╨┤╨░╨╡╨╝ ╨╖╨╡╤А╨║╨░╨╗╨╛ ╨▒╨╡╨╖ ╨╛╨┤╨╜╨╛╨│╨╛ ╤Н╨╗╨╡╨╝╨╡╨╜╤В╨░ (missing)
 [root@otuslinux vagrant]# mdadm --create /dev/md0 --level=1 --raid-devices=2 missing /dev/sdb1
 mdadm: Note: this array has metadata at the start and
     may not be suitable as a boot device.  If you plan to
@@ -44,7 +44,7 @@ mdadm: Defaulting to version 1.2 metadata
 mdadm: array /dev/md0 started.
 
 
-# и размечаем файловую систему
+# ╨╕ ╤А╨░╨╖╨╝╨╡╤З╨░╨╡╨╝ ╤Д╨░╨╣╨╗╨╛╨▓╤Г╤О ╤Б╨╕╤Б╤В╨╡╨╝╤Г
 [root@otuslinux vagrant]# mkfs.xfs /dev/md0
 meta-data=/dev/md0               isize=512    agcount=4, agsize=2619264 blks
          =                       sectsz=512   attr=2, projid32bit=1
@@ -56,7 +56,7 @@ log      =internal log           bsize=4096   blocks=5115, version=2
          =                       sectsz=512   sunit=0 blks, lazy-count=1
 realtime =none                   extsz=4096   blocks=0, rtextents=0
 
-# монтируем и копируем
+# ╨╝╨╛╨╜╤В╨╕╤А╤Г╨╡╨╝ ╨╕ ╨║╨╛╨┐╨╕╤А╤Г╨╡╨╝
 [root@otuslinux vagrant]# mount /dev/md0 /mnt
 [root@otuslinux vagrant]# rsync -PavHxAX --exclude /dev --exclude /proc --exclude /sys --exclude /run --exclude /mnt / /mnt
 ...
@@ -64,15 +64,15 @@ sent 2,969,242,396 bytes  received 810,129 bytes  77,144,221.43 bytes/sec
 total size is 2,978,195,530  speedup is 1.00
 
 
-# создаем пропущенные директории
+# ╤Б╨╛╨╖╨┤╨░╨╡╨╝ ╨┐╤А╨╛╨┐╤Г╤Й╨╡╨╜╨╜╤Л╨╡ ╨┤╨╕╤А╨╡╨║╤В╨╛╤А╨╕╨╕
 [root@otuslinux vagrant]# for a in dev sys proc run mnt; do mkdir /mnt/$a; done
 
 
-# монтируем специальные файловые  системы и чрутимся
+# ╨╝╨╛╨╜╤В╨╕╤А╤Г╨╡╨╝ ╤Б╨┐╨╡╤Ж╨╕╨░╨╗╤М╨╜╤Л╨╡ ╤Д╨░╨╣╨╗╨╛╨▓╤Л╨╡  ╤Б╨╕╤Б╤В╨╡╨╝╤Л ╨╕ ╤З╤А╤Г╤В╨╕╨╝╤Б╤П
 [root@otuslinux vagrant]# for a in dev sys proc ; do mount --bind /$a /mnt/$a; done
 [root@otuslinux vagrant]# chroot /mnt
 
-# правим /etc/fsta, чтобы корень ссыллся на првильный uuid
+# ╨┐╤А╨░╨▓╨╕╨╝ /etc/fsta, ╤З╤В╨╛╨▒╤Л ╨║╨╛╤А╨╡╨╜╤М ╤Б╤Б╤Л╨╗╨╗╤Б╤П ╨╜╨░ ╨┐╤А╨▓╨╕╨╗╤М╨╜╤Л╨╣ uuid
 [root@otuslinux /]# blkid
 /dev/sda1: UUID="8ac075e3-1124-4bb6-bef7-a6811bf8b870" TYPE="xfs"
 /dev/sdb1: UUID="ef4c7b73-73bf-4089-cd28-645a0cc68564" UUID_SUB="58cd6d36-2490-0976-65b3-4f5a3c7f493e" LABEL="otuslinux:0" TYPE="linux_raid_member"
@@ -81,12 +81,12 @@ total size is 2,978,195,530  speedup is 1.00
 UUID=121bcded-cac4-4076-a720-4e5daf5b1cb3 /                       xfs     defaults        0 0
 
 
-# создаем конфигурацию mdadm
+# ╤Б╨╛╨╖╨┤╨░╨╡╨╝ ╨║╨╛╨╜╤Д╨╕╨│╤Г╤А╨░╤Ж╨╕╤О mdadm
 [root@otuslinux /]# mdadm --detail --scan
 ARRAY /dev/md0 metadata=1.2 name=otuslinux:0 UUID=ef4c7b73:73bf4089:cd28645a:0cc68564
 [root@otuslinux /]# mdadm --detail --scan > /etc/mdadm.conf
 
-# бакапим старый и создаем новый инитрамфс, проверяем что модуль mdraid попал в образ
+# ╨▒╨░╨║╨░╨┐╨╕╨╝ ╤Б╤В╨░╤А╤Л╨╣ ╨╕ ╤Б╨╛╨╖╨┤╨░╨╡╨╝ ╨╜╨╛╨▓╤Л╨╣ ╨╕╨╜╨╕╤В╤А╨░╨╝╤Д╤Б, ╨┐╤А╨╛╨▓╨╡╤А╤П╨╡╨╝ ╤З╤В╨╛ ╨╝╨╛╨┤╤Г╨╗╤М mdraid ╨┐╨╛╨┐╨░╨╗ ╨▓ ╨╛╨▒╤А╨░╨╖
 [root@otuslinux /]# ls /boot/init*
 /boot/initramfs-3.10.0-957.12.2.el7.x86_64.img
 [root@otuslinux /]# cp /boot/initramfs-3.10.0-957.12.2.el7.x86_64.img /boot/initramfs-3.10.0-957.12.2.el7.x86_64.img.backup
@@ -108,13 +108,13 @@ fs-lib
 shutdown
 
 
-# добавляем rd.auto=1 в параметры запуска загрузчика
+# ╨┤╨╛╨▒╨░╨▓╨╗╤П╨╡╨╝ rd.auto=1 ╨▓ ╨┐╨░╤А╨░╨╝╨╡╤В╤А╤Л ╨╖╨░╨┐╤Г╤Б╨║╨░ ╨╖╨░╨│╤А╤Г╨╖╤З╨╕╨║╨░
 [root@otuslinux /]# vi /etc/default/grub
 GRUB_CMDLINE_LINUX="no_timer_check console=tty0 console=ttyS0,115200n8 net.ifnames=0 biosdevname=0 elevator=noop cr
 ashkernel=auto rd.auto=1"
 
 
-# обновляем конфигурацию grub
+# ╨╛╨▒╨╜╨╛╨▓╨╗╤П╨╡╨╝ ╨║╨╛╨╜╤Д╨╕╨│╤Г╤А╨░╤Ж╨╕╤О grub
 [root@otuslinux /]# grub2-mkconfig -o /boot/grub2/grub.cfg
 Generating grub configuration file ...
 /usr/sbin/grub2-probe: warning: Couldn't find physical volume `(null)'. Some modules may be missing from core image..
@@ -126,37 +126,37 @@ Found initrd image: /boot/initramfs-3.10.0-957.12.2.el7.x86_64.img
 /usr/sbin/grub2-probe: warning: Couldn't find physical volume `(null)'. Some modules may be missing from core image..
 done
 
-# и инсталируем загрузчик на второй диск
+# ╨╕ ╨╕╨╜╤Б╤В╨░╨╗╨╕╤А╤Г╨╡╨╝ ╨╖╨░╨│╤А╤Г╨╖╤З╨╕╨║ ╨╜╨░ ╨▓╤В╨╛╤А╨╛╨╣ ╨┤╨╕╤Б╨║
 [root@otuslinux /]# grub2-install /dev/sdb
 Installing for i386-pc platform.
 grub2-install: warning: Couldn't find physical volume `(null)'. Some modules may be missing from core image..
 grub2-install: warning: Couldn't find physical volume `(null)'. Some modules may be missing from core image..
 Installation finished. No error reported.
 
-# ВАЖНО! Тут я потерял много времени. Если перегрузиться сейчас и загрузить виртуалку со второго диска, то
-# ядро грузится, система даже покажет приграшение login:, но авторизация любыи пользователем будет неудачной
-# зайти по ssh невозможно, в том числе по ключам. Причина оказалась в SELINUX, поэтому
+# ╨Т╨Р╨Ц╨Э╨Ю! ╨в╤Г╤В ╤П ╨┐╨╛╤В╨╡╤А╤П╨╗ ╨╝╨╜╨╛╨│╨╛ ╨▓╤А╨╡╨╝╨╡╨╜╨╕. ╨Х╤Б╨╗╨╕ ╨┐╨╡╤А╨╡╨│╤А╤Г╨╖╨╕╤В╤М╤Б╤П ╤Б╨╡╨╣╤З╨░╤Б ╨╕ ╨╖╨░╨│╤А╤Г╨╖╨╕╤В╤М ╨▓╨╕╤А╤В╤Г╨░╨╗╨║╤Г ╤Б╨╛ ╨▓╤В╨╛╤А╨╛╨│╨╛ ╨┤╨╕╤Б╨║╨░, ╤В╨╛
+# ╤П╨┤╤А╨╛ ╨│╤А╤Г╨╖╨╕╤В╤Б╤П, ╤Б╨╕╤Б╤В╨╡╨╝╨░ ╨┤╨░╨╢╨╡ ╨┐╨╛╨║╨░╨╢╨╡╤В ╨┐╤А╨╕╨│╤А╨░╤И╨╡╨╜╨╕╨╡ login:, ╨╜╨╛ ╨░╨▓╤В╨╛╤А╨╕╨╖╨░╤Ж╨╕╤П ╨╗╤О╨▒╤Л╨╕ ╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╤В╨╡╨╗╨╡╨╝ ╨▒╤Г╨┤╨╡╤В ╨╜╨╡╤Г╨┤╨░╤З╨╜╨╛╨╣
+# ╨╖╨░╨╣╤В╨╕ ╨┐╨╛ ssh ╨╜╨╡╨▓╨╛╨╖╨╝╨╛╨╢╨╜╨╛, ╨▓ ╤В╨╛╨╝ ╤З╨╕╤Б╨╗╨╡ ╨┐╨╛ ╨║╨╗╤О╤З╨░╨╝. ╨Я╤А╨╕╤З╨╕╨╜╨░ ╨╛╨║╨░╨╖╨░╨╗╨░╤Б╤М ╨▓ SELINUX, ╨┐╨╛╤Н╤В╨╛╨╝╤Г
 
-# отключаем selinux
+# ╨╛╤В╨║╨╗╤О╤З╨░╨╡╨╝ selinux
 [root@otuslinux /]# grep SELINUX= /etc/selinux/config
 # SELINUX= can take one of these three values:
 SELINUX=disabled
 
 
-#  и теперь перегружаем виртуалку, выбрав в virtualbox загрузку со Slave диска.
-# После успешной загрузки продолжаем.  Для диска /dev/sda меняем его тип на FD raid autodetect
+#  ╨╕ ╤В╨╡╨┐╨╡╤А╤М ╨┐╨╡╤А╨╡╨│╤А╤Г╨╢╨░╨╡╨╝ ╨▓╨╕╤А╤В╤Г╨░╨╗╨║╤Г, ╨▓╤Л╨▒╤А╨░╨▓ ╨▓ virtualbox ╨╖╨░╨│╤А╤Г╨╖╨║╤Г ╤Б╨╛ Slave ╨┤╨╕╤Б╨║╨░.
+# ╨Я╨╛╤Б╨╗╨╡ ╤Г╤Б╨┐╨╡╤И╨╜╨╛╨╣ ╨╖╨░╨│╤А╤Г╨╖╨║╨╕ ╨┐╤А╨╛╨┤╨╛╨╗╨╢╨░╨╡╨╝.  ╨Ф╨╗╤П ╨┤╨╕╤Б╨║╨░ /dev/sda ╨╝╨╡╨╜╤П╨╡╨╝ ╨╡╨│╨╛ ╤В╨╕╨┐ ╨╜╨░ FD raid autodetect
 #
 [root@otuslinux vagrant]# fdisk /dev/sda
    Device Boot      Start         End      Blocks   Id  System
 /dev/sda1   *        2048    83886079    41942016   fd  Linux raid autodetect
 
 
-# Добавляем первый диск, как элемент зеркала
+# ╨Ф╨╛╨▒╨░╨▓╨╗╤П╨╡╨╝ ╨┐╨╡╤А╨▓╤Л╨╣ ╨┤╨╕╤Б╨║, ╨║╨░╨║ ╤Н╨╗╨╡╨╝╨╡╨╜╤В ╨╖╨╡╤А╨║╨░╨╗╨░
 [root@otuslinux vagrant]# mdadm --manage /dev/md0 --add /dev/sda1
 mdadm: added /dev/sda1
 
 
-# И наблюдаем как идет процесс синхронизации
+# ╨Ш ╨╜╨░╨▒╨╗╤О╨┤╨░╨╡╨╝ ╨║╨░╨║ ╨╕╨┤╨╡╤В ╨┐╤А╨╛╤Ж╨╡╤Б╤Б ╤Б╨╕╨╜╤Е╤А╨╛╨╜╨╕╨╖╨░╤Ж╨╕╨╕
 [root@otuslinux vagrant]# cat /proc/mdstat
 Personalities : [raid1]
 md0 : active raid1 sda1[2] sdb1[1]
@@ -166,7 +166,7 @@ md0 : active raid1 sda1[2] sdb1[1]
 unused devices: <none>
 [root@otuslinux vagrant]#
 
-# осталось установить загрузчик
+# ╨╛╤Б╤В╨░╨╗╨╛╤Б╤М ╤Г╤Б╤В╨░╨╜╨╛╨▓╨╕╤В╤М ╨╖╨░╨│╤А╤Г╨╖╤З╨╕╨║
 [root@otuslinux vagrant]# grub2-install /dev/sda
 Installing for i386-pc platform.
 grub2-install: warning: Couldn't find physical volume `(null)'. Some modules may be missing from core image..
@@ -174,7 +174,7 @@ grub2-install: warning: Couldn't find physical volume `(null)'. Some modules may
 Installation finished. No error reported.
 
 
-# И задача решена. Итоговое состояние
+# ╨Ш ╨╖╨░╨┤╨░╤З╨░ ╤А╨╡╤И╨╡╨╜╨░. ╨Ш╤В╨╛╨│╨╛╨▓╨╛╨╡ ╤Б╨╛╤Б╤В╨╛╤П╨╜╨╕╨╡
 [root@otuslinux vagrant]# lsblk
 NAME    MAJ:MIN RM SIZE RO TYPE  MOUNTPOINT
 sda       8:0    0  40G  0 disk
