@@ -6,32 +6,6 @@ MACHINES = {
         :box_name => "centos/7",
         :ip_addr => '192.168.11.101',
 	:disks => {
-		:sata1 => {
-			:dfile => './sata1.vdi',
-			:size => 250,
-			:port => 1
-		},
-		:sata2 => {
-                        :dfile => './sata2.vdi',
-                        :size => 250, # Megabytes
-			:port => 2
-		},
-                :sata3 => {
-                        :dfile => './sata3.vdi',
-                        :size => 250,
-                        :port => 3
-                },
-                :sata4 => {
-                        :dfile => './sata4.vdi',
-                        :size => 250, # Megabytes
-                        :port => 4
-                },
-                :sata5 => {
-                        :dfile => './sata5.vdi',
-                        :size => 250, # Megabytes
-                        :port => 5
-                }
-
 	}
 
 		
@@ -72,7 +46,6 @@ Vagrant.configure("2") do |config|
 	      mkdir -p ~root/.ssh
               cp ~vagrant/.ssh/auth* ~root/.ssh
 	      yum install -y mdadm smartmontools hdparm gdisk
-	      /vagrant/mkraid10-with-hotspare.sh
 
   	  SHELL
 
