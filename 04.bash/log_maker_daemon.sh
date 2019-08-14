@@ -1,7 +1,7 @@
 #!/bin/bash
 
-source=big-access.log
-destination=access.log
+source=big_nginx_log
+destination=nginx_log
 
 . log_maker_daemon.conf
 
