@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 log=./nginx_log
 lockfile=./read.lock

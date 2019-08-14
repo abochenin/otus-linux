@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 source=big_nginx_log
 destination=nginx_log
