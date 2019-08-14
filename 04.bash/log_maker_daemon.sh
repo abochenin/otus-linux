@@ -1,9 +1,9 @@
 #!/bin/sh
 
-source=big_nginx_log
-destination=nginx_log
+source=./big_nginx_log
+destination=./nginx_log
 
-. log_maker_daemon.conf
+. ./log_maker_daemon.conf
 
 while true; do
   partlen=$((3+$RANDOM*7/32767))

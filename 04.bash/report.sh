@@ -2,7 +2,7 @@
 
 log=./nginx_log
 lockfile=./read.lock
-conf=report.conf
+conf=./report.conf
 partlen=0
 
 . $conf
