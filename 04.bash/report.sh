@@ -1,21 +1,15 @@
 #!/bin/sh
 
 log=./nginx_log
-lockfile=./read.lock
+lockfile=./report.lock
 conf=./report.conf
 partlen=0
 
 . $conf
 
-#77.37.14.35 - - [04/Jun/2015:03:06:06 +0000] "GET /downloads/product_2 HTTP/1.1" 404 336 "-" "Debian APT-HTTP/1.3 (0.9.7.9)"
-#192.133.141.16 - - [04/Jun/2015:03:06:55 +0000] "GET /downloads/product_1 HTTP/1.1" 404 332 "-" "Debian APT-HTTP/1.3 (0.9.7.9)"
-
 
 printReport()
 {
-  partlen=`cat part|wc -l`
-  #echo partlen=$partlen
-
   timebegin=`head -1 part | awk '{print $4}' | sed s/\\\[//g`
   timeend=`tail -1 part | awk '{print $4}' | sed s/\\\[//g`
 
@@ -42,12 +36,12 @@ printReport()
   echo "  Число Код_возврата"
   cat part |awk '{print $9}' |sort |uniq -c |sort -nr
 
-  echo Выборочный анализ ошибок на примере 403 и 500
-  echo -e "\n=== Ошибка 403 и список URL (первых 10 строк)"
-  cat part |awk '($9 ~ /403/)' |awk '{print $7}'
+  echo Выборочный анализ ошибок на примере 4** и 5**
+  echo -e "\n=== Ошибки 400+ и список URL (первых 10 строк)"
+  cat part |awk '($9 ~ /4[0-9][0-9]/)' |awk '{print $7}'
 
-  echo -e "\n=== Ошибка 500 и список URL (первых 10 строк)"
-  cat part |awk '($9 ~ /500/)' |awk '{print $7}'|head -10
+  echo -e "\n=== Ошибки 500+ и список URL (первых 10 строк)"
+  cat part |awk '($9 ~ /5[0-9][0-9]/)' |awk '{print $7}'|head -10
 }
 
 saveConf()
@@ -85,13 +79,14 @@ trap 'getTrap SIGHUP' SIGHUP
 trap 'getTrap EXIT' EXIT
 
 cat $log| tail -n +$skiplines >part
+partlen=`cat part|wc -l`
 
 result=$(
   printReport
 )
-saveConf
 echo "$result"
-echo "$result" | mailx -s "Report"  bochenin
+saveConf
+echo "$result" | mailx -s "Report"  root
 
 #echo sleep 100&& sleep 100
 

@@ -6,7 +6,7 @@ destination=./nginx_log
 . ./log_maker_daemon.conf
 
 while true; do
-  partlen=$((3+$RANDOM*7/32767))
+  partlen=$((30+$RANDOM*70/32767))
 #  echo skiplines=$skiplines, partlen=$partlen
 
   cat $source| tail -n +$skiplines | head -$partlen |tee -a $destination
