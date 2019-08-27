@@ -15,18 +15,19 @@
 ```bash
 $ vagrant up
 $ vagrant ssh
-[vagrant@hw4 ~]$ cd /vagrant 
+[vagrant@hw5 ~]$ cd /vagrant 
 ```
 
 Если vagrant запущен в Windows, то понадобится дополнительный шаг
 ```bash
-[vagrant@hw4 ~]$ dos2unix /vagrant/*
+[vagrant@hw5 ~]$ dos2unix /vagrant/cpu.sh
+[vagrant@hw5 ~]$ chmod 755 /vagrant/cpu.sh
 ```
 
 Запуск скрипта
 ```bash
 $ cd /vagrant
-$ sudo ./cpu.sh
+$ sudo bash ./cpu.sh
 ```
 
 Пример работы скрипта приведен ниже.
