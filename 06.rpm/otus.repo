@@ -1,0 +1,5 @@
+[otus]
+name=otus-linux
+baseurl=http://localhost/repo
+enabled=1
+gpgcheck=0
