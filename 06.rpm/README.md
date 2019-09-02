@@ -13,17 +13,63 @@
 
 ## Подготовка к запуску
 
-Создаем окружение из подготовленного vagrant-файла
+Создаем окружение из подготовленного vagrant-файла. Автоматически запустится скрипт провижининга rpm.sh
 
 ```bash
 $ vagrant up
-$ vagrant ssh
-[vagrant@hw5 ~]$ cd /vagrant 
 ```
 
-Запускаем скрипт rpm.sh, который выполнит сборку nginx и создание repo
+== Работа скрипта rpm.sh
+Это скрипт выполнит сборку nginx и создание repo.
 ```bash
-[root@hw6 vagrant]# ./run.sh
+#!/bin/sh
+
+
+cd /vagrant
+# устанавливаем необходимые пакеты
+yum install -y mc wget rpmdevtools rpm-build createrepo yum-utils  gcc
+
+# скачиваем исходники nginx
+wget http://nginx.org/packages/centos/7/SRPMS/nginx-1.16.1-1.el7.ngx.src.rpm
+rpm -ivh ./nginx-1.16.1-1.el7.ngx.src.rpm
+
+# .. и openssl
+wget https://www.openssl.org/source/openssl-1.1.1c.tar.gz
+mv openssl-1.1.1c.tar.gz ~/rpmbuild/SOURCES/
+
+# копируем подгтовленный SPEC в сборочницу
+cp /vagrant/nginx.spec ~/rpmbuild/SPECS/
+
+yum-builddep -y ~/rpmbuild/SPECS/nginx.spec
+
+# Сборка (долгий процесс)
+rpmbuild --ba ~/rpmbuild/SPECS/nginx.spec
+
+# Создаем папку для будущего репозитория 
+mkdir /vagrant/repo
+# собранные пакеты копируем в репо
+cp ~/rpmbuild/RPMS/x86_64/*.rpm /vagrant/repo/
+createrepo /vagrant/repo/
+
+# Настраиваем конфигурацию нового репо
+cp /vagrant/otus.repo /etc/yum.repos.d/
+
+# Устанавливаем собранный nginx (пока из файла напрямую, НЕ из репо, т.к новый репо на этом этапе еще не существует, мы его именно и создаем)
+rpm -ivh /vagrant/repo/nginx-1.16.1-1.el7.ngx.x86_64.rpm 
+cp /vagrant/default.conf /etc/nginx/conf.d/default.conf
+ln -s /vagrant/repo/ /usr/share/nginx/html/repo
+systemctl start nginx
+systemctl enable nginx
+# отключаем SELINUX. с ним у меня возникли проблемы с доступом в nginx
+sudo setenforce 0
+
+
+# А вот теперь репо полностью готов
+echo List of REPOs:
+yum repolist
+
+echo HOME page:
+wget -O- http://localhost/repo 2>/dev/null
 ```
 
 
@@ -56,59 +102,3 @@ repolist: 12,956
 </pre><hr></body>
 </html>
 ```
-
-
-
-
-
-
-
-
-Запуск скрипта
-```bash
-$ cd /vagrant
-$ sudo bash ./cpu.sh
-```
-
-Пример работы скрипта приведен ниже.
-
-```bash
-[vagrant@hw5 ~]$ sudo ./cpu.sh
-thread 1 started
-thread 2 started
-root     14410 14407  0 20:13 pts/1    00:00:00 dd if=/dev/urandom of=/dev/null count=1000 bs=1M
-root     14411 14408 99 20:13 pts/1    00:00:01 dd if=/dev/urandom of=/dev/null count=1000 bs=1M
-
-root     14410 14407  0 20:13 pts/1    00:00:00 dd if=/dev/urandom of=/dev/null count=1000 bs=1M
-root     14411 14408 99 20:13 pts/1    00:00:03 dd if=/dev/urandom of=/dev/null count=1000 bs=1M
-
-root     14410 14407  0 20:13 pts/1    00:00:00 dd if=/dev/urandom of=/dev/null count=1000 bs=1M
-
-root     14410 14407 16 20:13 pts/1    00:00:01 dd if=/dev/urandom of=/dev/null count=1000 bs=1M
-
-root     14410 14407 28 20:13 pts/1    00:00:02 dd if=/dev/urandom of=/dev/null count=1000 bs=1M
-
-root     14410 14407 37 20:13 pts/1    00:00:03 dd if=/dev/urandom of=/dev/null count=1000 bs=1M
-
-root     14410 14407 44 20:13 pts/1    00:00:04 dd if=/dev/urandom of=/dev/null count=1000 bs=1M
-
-root     14410 14407 50 20:13 pts/1    00:00:05 dd if=/dev/urandom of=/dev/null count=1000 bs=1M
-
-
-Пониженный приоритет:
-
-real    0m10.839s
-user    0m0.005s
-sys     0m5.329s
-
-Повышенный приоритет:
-
-real    0m5.392s
-user    0m0.002s
-sys     0m5.321s
-
-```
-
-Из отчета видно, что менее приоритетный процесс отрабатывает почти в два раза медленнее, чем высокоприоритетный. 
-И эта разница во времени будет расти, если в скрипте увеличивать нагрузку на cpu, например увеличив значение count.
-
