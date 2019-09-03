@@ -1,4 +1,4 @@
-# Домашнее задание 06.rpm
+# Домашнее задание 07.boot
 Домашнее задание
 
 Работа с загрузчиком
@@ -12,14 +12,16 @@
 ## Подготовка к запуску
 
 Создаем окружение из подготовленного vagrant-файла. 
+```bash
 $ vagrant up
+```
 
 ## Способ 1.1
-При загрузке виртуальной машины жмём E для входа в grub, и в строке параметров загрузки ядра меняем
-стираем все опции console=** (иначе загрузка виртуалки виснет)
-стираем quiet для подробного лога
-добавляем в опции init=/sysroot/bin/sh
-добавляем enforcing=0 для временного отключения selinux
+При загрузке виртуальной машины жмём E для входа в grub, и в строке параметров загрузки ядра меняем: 
+стираем все опции console=** (иначе загрузка виртуалки виснет), 
+стираем quiet для подробного лога, 
+добавляем в опции init=/sysroot/bin/sh, 
+добавляем enforcing=0 для временного отключения selinux.
 
 Жмем Ctrl+X для продолжения загрузки, попадаем в шелл.
 ```bash
@@ -32,10 +34,10 @@ reboot -f
 Снова заходим в grub, добавляем enforcing=0 для временного отключения selinux, продолжаем загрузку и заходим в систему новым паролем root.
 
 ## Способ 1.2
-При загрузке виртуальной машины жмём E для входа в grub, и в строке параметров загрузки ядра меняем
-добавляем в опции init=/sysroot/bin/sh
-стираем все опции console=** (иначе загрузка виртуалки виснет)
-стираем quiet для подробного лога
+При загрузке виртуальной машины жмём E для входа в grub, и в строке параметров загрузки ядра меняем: 
+добавляем в опции init=/sysroot/bin/sh, 
+стираем все опции console=** (иначе загрузка виртуалки виснет), 
+стираем quiet для подробного лога, 
 добавляем в опции rd.break
 
 Жмем Ctrl+X для продолжения загрузки, попадаем в шелл.
@@ -51,13 +53,13 @@ reboot -f
 # 2. Установить систему с LVM, после чего переименовать VG
 Для второго задания подходит тот же vagrantfile. Исходное имя группы томов - VolGroup00. Её и будем переименовывать.
 ```bash
-[vagrant@localhost ~]$ sudo bash
+[vagrant@hw7 ~]$ sudo bash
 
-[root@localhost vagrant]# vgs
+[root@hw7 ~]# vgs
   VG         #PV #LV #SN Attr   VSize   VFree
   VolGroup00   1   2   0 wz--n- <38.97g    0
 
-[root@localhost vagrant]# lsblk
+[root@hw7 ~]# lsblk
 NAME                    MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
 sda                       8:0    0   40G  0 disk
 ├─sda1                    8:1    0    1M  0 part
@@ -68,26 +70,26 @@ sda                       8:0    0   40G  0 disk
 ```
 
 ```bash
-[root@localhost vagrant]# vgrename VolGroup00 vg
+[root@hw7 ~]# vgrename VolGroup00 vg
   Volume group "VolGroup00" successfully renamed to "vg"
 ```
 
 И вносим соотвествующие изменения в конфиги
 ```bash
-[root@localhost vagrant]# sed -i "s/VolGroup00/vg/g" /etc/fstab
-[root@localhost vagrant]# sed -i "s/VolGroup00/vg/g" /etc/default/grub
-[root@localhost vagrant]# sed -i "s/VolGroup00/vg/g" /boot/grub2/grub.cfg
+[root@hw7 ~]# sed -i "s/VolGroup00/vg/g" /etc/fstab
+[root@hw7 ~]# sed -i "s/VolGroup00/vg/g" /etc/default/grub
+[root@hw7 ~]# sed -i "s/VolGroup00/vg/g" /boot/grub2/grub.cfg
 ```
 
 Перегружаемся, снова заходим в grub, добавляем enforcing=0 для временного отключения selinux, 
 продолжаем загрузку и после входа в систему, видим что группа томов успешно переименована
 
 ```bash
-[vagrant@localhost ~]$ sudo vgs
+[vagrant@hw7 ~]$ sudo vgs
   VG #PV #LV #SN Attr   VSize   VFree
   vg   1   2   0 wz--n- <38.97g    0
 
-[vagrant@localhost ~]$ sudo lsblk
+[vagrant@hw7 ~]$ sudo lsblk
 NAME            MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
 sda               8:0    0   40G  0 disk
 ├─sda1            8:1    0    1M  0 part
@@ -101,16 +103,29 @@ sda               8:0    0   40G  0 disk
 
 Создаем папку для скриптов
 ```bash
-[root@localhost vagrant]# mkdir /usr/lib/dracut/modules.d/01test
+[root@hw7 ~]# mkdir /usr/lib/dracut/modules.d/01test
+```
+Если vagrant запущен в Windows, то понадобится дополнительный шаг
+```bash
+[vagrant@hw7 ~]$ dos2unix /vagrant/*.sh
 ```
 
 Копируем модуль
 ```bash
-[root@localhost vagrant]# cp /vagrant/*sh /usr/lib/dracut/modules.d/01test/
-[root@localhost vagrant]# chmod 755 /usr/lib/dracut/modules.d/01test/*.sh
+[root@hw7 ~]# cp /vagrant/*sh /usr/lib/dracut/modules.d/01test/
+[root@hw7 ~]# chmod 755 /usr/lib/dracut/modules.d/01test/*.sh
 ```
 
 Пересоздаем initrd
 ```bash
-[root@localhost vagrant]# dracut -fv
+[root@hw7 ~]# dracut -fv
 ```
+
+И проверяем что модуль попал в образ
+```bash
+[root@hw7 ~]# lsinitrd -m /boot/initramfs-$(uname -r).img | grep test
+```
+
+Отредактировать /etc/grub2.cfg, убрать из опций rhgb и quiet, и добавить enforcing=0 
+
+В процессе загрузки увидим результат работы модуля (рисунок пингвинчика и пауза в 10 секунд)
