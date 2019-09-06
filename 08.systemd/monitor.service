@@ -1,0 +1,11 @@
+[Unit]
+Description=сервис, который будет раз в 30 секунд мониторить лог на предмет наличия ключевого слова. Файл и слово должны задаваться в /etc/sysconfig
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/sysconfig/monitor.conf
+ExecStart=/vagrant/monitor.sh
+
+[Install]
+WantedBy=multi-user.target
+

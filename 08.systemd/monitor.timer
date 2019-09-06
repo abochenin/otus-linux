@@ -1,0 +1,13 @@
+[Unit]
+Description=сервис, который будет раз в 30 секунд мониторить лог на предмет наличия ключевого слова. Файл и слово должны задаваться в /etc/sysconfig
+
+[Timer]
+OnBootSec=1
+OnActiveSec=1
+OnUnitActiveSec=30
+Unit=monitor.service
+#Persistent=true
+
+
+[Install]
+WantedBy=timers.target
