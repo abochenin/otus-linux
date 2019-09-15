@@ -1,0 +1,6 @@
+---
+- name: HW09. Разворачивание NGINX с помощью ansible с применением роли
+  hosts: nginx
+  become: true
+  roles:
+    - nginx

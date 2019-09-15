@@ -1,0 +1,21 @@
+---
+- name: NGINX | Установка и настройка NGINX
+  hosts: nginx
+  become: true
+
+  tasks:
+    - name: NGINX | Установка репозитория EPEL Repo
+      yum:
+        name: epel-release
+        state: present
+      tags:
+        - epel-package
+        - packages
+
+    - name: NGINX | Установка пакета NGINX
+      yum:
+        name: nginx
+        state: latest
+      tags:
+        - nginx-package
+        - packages

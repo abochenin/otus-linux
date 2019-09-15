@@ -1,0 +1,29 @@
+---
+# tasks file for nginx
+- name: NGINX | Установка репо EPEL Repo
+  yum:
+    name: epel-release
+    state: present
+  tags:
+    - epel-package
+    - packages
+
+- name: NGINX | Установка пакета nginx
+  yum:
+    name: nginx
+    state: latest
+  notify:
+    - restart nginx
+  tags:
+    - nginx-package
+    - packages
+
+- name: NGINX | Создание конфигурационного файла nginx.conf из темплейта
+  template:
+    src: nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+  notify:
+    - reload nginx
+  tags:
+    - nginx-configuration
+    
