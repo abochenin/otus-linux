@@ -1,0 +1,6 @@
+---
+- name: HW10. PAM
+  hosts: hw10
+  become: true
+  roles:
+    - pam

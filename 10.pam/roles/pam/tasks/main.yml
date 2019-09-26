@@ -1,0 +1,60 @@
+---
+# tasks file for pam
+- name: PAM | Установка репо EPEL Repo
+  yum:
+    name: epel-release
+    state: present
+  tags:
+    - epel-package
+    - packages
+
+- name: PAM | Создание группы admin
+  group:
+    name: admin
+    state: present
+
+- name: PAM | Создание обычного пользователя user с паролем {{ password }}
+  user:
+    name: user
+    password: "{{ password | password_hash('sha512') }}"
+    state: present
+    update_password: on_create
+
+- name: PAM | Создание пользователя admin в группе admin c паролем {{ password }}
+  user:
+    name: admin
+    group: admin
+    password: "{{ password | password_hash('sha512') }}"
+    state: present
+    update_password: on_create
+
+- name: PAM | Копирование скрипта pam_check
+  copy:
+    src: pam_check.sh
+    dest: /bin/pam_check.sh
+    mode: '0755'
+
+- name: PAM.1 | Добавляем правило "account required pam_exec.so" для модуля sshd
+  pamd:
+    name: sshd
+    type: account
+    control: required
+    module_path: pam_nologin.so
+    new_type: account
+    new_control: required
+    new_module_path: pam_exec.so
+    module_arguments: /bin/pam_check.sh
+    state: after
+  tags:
+    - pam-script
+
+- name: PAM.2 | Добавляем пользователю user право запускать ЛЮБЫЕ команды через sudo без пароля
+  lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: '^user ALL='
+    line: 'user ALL=(ALL) NOPASSWD: ALL'
+    validate: '/usr/sbin/visudo -cf %s'
+  tags:
+    - pam-sudo
+    
