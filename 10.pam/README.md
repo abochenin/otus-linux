@@ -1,4 +1,4 @@
-# Домашнее задание 09.ansible
+# Домашнее задание 10.pam
 Домашнее задание
 
 PAM
@@ -78,7 +78,7 @@ user@localhost's password:
 admin:$6$KfF5wui6VUldSY4R$utUYbkWum7cIpcHTudow8A9.6o6fnWrcus3ur1bygrI0/6FjaW/znnDL2J/kHM1jplic85/.N/uMFIf91EeuR/:18165:0:99999:7:::
 ```
 
-А ниже для сравнения как выглядит попытка пользователя admin использовать sudo. Видно, что пользователь не привелегирован, и все стандартные ограничения работают.
+А ниже для сравнения как выглядит попытка пользователя admin использовать sudo. Видно, что пользователь не привилегирован, и все стандартные ограничения работают.
 ```bash
 [root@hw10 vagrant]# ssh admin@localhost "sudo grep admin /etc/shadow"
 admin@localhost's password:
