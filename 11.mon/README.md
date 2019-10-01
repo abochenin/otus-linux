@@ -21,8 +21,10 @@
 
 ## Описание
 Был выбран вариант с использованием стенда vagrant, который предоставили на лекции.
-Настроены prometheus + grafana, на дащбоард выведены несколько графиков. В качестве Datasource экспериментировал с TestDataDB (встроенный функционал grafana)
+
+Настроены prometheus + grafana, на дашбоард выведены несколько графиков. 
+В качестве Datasource экспериментировал с Prometheus + nodeexport, TestDataDB (встроенный функционал grafana)
 
 Прикладываю скриншот 
 
-![Grafana](https://github.com/abochenin/otus-linux/HW11/screenshot.png)
+![Grafana](https://github.com/abochenin/otus-linux/blob/master/11.mon/screenshot.png)
