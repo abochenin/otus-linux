@@ -1,0 +1,57 @@
+---
+- name: Install php
+  apt:
+    name: "{{ packages }}"
+    state: latest
+  vars:
+    packages:
+      - php
+      - php-bcmath
+      - php-bz2
+      - php-intl
+      - php-gd
+      - php-mbstring
+      - php-mysql
+      - php-mysql
+      - php-zip
+      - php-fpm
+      - php-dom
+      - php-fileinfo
+      - php-iconv
+      - php-json
+      - php-pdo
+      - php-phar
+      - php-simplexml
+      - php-xml
+      - php-curl
+  tags: web
+
+- name: Enable php-fpm
+  systemd:
+    name: php7.2-fpm
+    enabled: yes
+  tags: web
+
+- name: Stop apache
+  service:
+    name: apache2
+    state: stopped
+  tags: web
+
+- name: Delete apache2
+  apt:
+    name: apache2
+    state: absent
+  tags: web
+
+- name: Install nginx
+  apt:
+    name: nginx
+    state: latest
+  tags: web
+
+- name: nginx
+  systemd:
+    name: nginx
+    enabled: yes
+  tags: web

@@ -1,0 +1,38 @@
+---
+- name: Update
+  apt:
+    update_cache: yes
+  tags: common
+
+- name: Upgrade
+  apt:
+    upgrade: dist
+  tags: common
+
+- name: Upgrade all packages
+  apt: 
+    name: "*"
+    state: latest
+  tags: common
+
+- name: Create temp directory
+  file:
+    path: /root/tmp
+    state: directory
+  tags: common
+
+- name: Set dns to resolv.conf
+  lineinfile:
+    path: /etc/resolv.conf
+    regexp: '^nameserver'
+    state: absent
+  tags: common
+
+- name: Add DNS servers
+  blockinfile:
+    path: /etc/resolv.conf
+    block: |
+      nameserver 127.0.0.53
+#      nameserver 8.8.8.8
+#      nameserver 1.1.1.1
+  tags: common

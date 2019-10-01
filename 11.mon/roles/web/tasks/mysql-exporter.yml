@@ -1,0 +1,49 @@
+---
+- name: Copy connection config
+  copy:
+    src: mysqld_exporter.cnf
+    dest: /etc/.mysqld_exporter.cnf
+    owner: root
+    group: root
+    mode: 0644
+  tags: mysql-exporter
+  notify: Restart mysql-server
+
+- name: Copy unit file
+  copy:
+    src: mysql_exporter.service
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: 0644
+  tags: mysql-exporter
+
+- name: Download mysql-exporter
+  get_url:
+    url: https://github.com/prometheus/mysqld_exporter/releases/download/v0.12.0/mysqld_exporter-0.12.0.linux-amd64.tar.gz
+    dest: /root/tmp
+  tags: mysql-exporter
+
+- name: Unarchive mysql-exporter
+  unarchive:
+    src: /root/tmp/mysqld_exporter-0.12.0.linux-amd64.tar.gz
+    dest: /usr/local/bin/
+    remote_src: yes
+  tags: mysql-exporter
+  
+- name: Reload daemon
+  systemd:
+    daemon_reload: yes
+  tags: mysql-exporter
+
+- name: Enable mysql-exporter
+  systemd:
+    name: mysql_exporter
+    enabled: yes
+  tags: mysql-exporter
+
+- name: Restart mysql-exporter
+  systemd:
+    name: mysql_exporter
+    state: restarted
+  tags: mysql-exporter

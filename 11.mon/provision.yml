@@ -1,0 +1,16 @@
+---
+- name: Provision mon server
+  hosts: mon
+  become: true
+  roles:
+    - role: mon
+
+- name: Provision web server
+  hosts: web
+  become: true
+  roles:
+    - role: web
+  vars:
+    mysql_pwd: "password"
+    wp_pwd: "wppass"
+    exp_pwd: "expass"

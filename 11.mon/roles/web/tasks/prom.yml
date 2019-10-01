@@ -1,0 +1,17 @@
+---
+- name: Add repo
+  apt_key:
+    url: https://s3-eu-west-1.amazonaws.com/deb.robustperception.io/41EFC99D.gpg
+    state: present
+  tags: prom
+
+- name: Update
+  apt:
+    update_cache: yes
+  tags: prom
+
+- name: Install prom, etc.
+  apt:
+    name: prometheus-node-exporter
+    state: latest
+  tags: prom

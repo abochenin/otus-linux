@@ -1,0 +1,40 @@
+---
+- name: Copy unit file
+  copy:
+    src: nginx_exporter.service
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: 0644
+  tags: nginx-exporter
+
+- name: Download nginx exporter
+  get_url:
+    url: https://github.com/nginxinc/nginx-prometheus-exporter/releases/download/v0.4.2/nginx-prometheus-exporter-0.4.2-linux-amd64.tar.gz
+    dest: /root/tmp
+  tags: nginx-exporter
+
+- name: Unarchive nginx-exporter
+  unarchive:
+    src: /root/tmp/nginx-prometheus-exporter-0.4.2-linux-amd64.tar.gz
+    dest: /usr/local/bin/
+    remote_src: yes
+  tags: nginx-exporter
+
+- name: Reload daemon
+  systemd:
+    daemon_reload: yes
+  tags: nginx-exporter
+
+- name: Enable nginx-exporter
+  systemd:
+    name: nginx_exporter
+    enabled: yes
+  tags: nginx-exporter
+
+- name: Restart nginx-exporter
+  systemd:
+    name: nginx_exporter
+    state: restarted
+  tags: nginx-exporter
+  

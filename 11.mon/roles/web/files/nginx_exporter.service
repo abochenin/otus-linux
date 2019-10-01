@@ -1,0 +1,14 @@
+[Unit]
+Description=Prometheus Nginx Exporter
+After=network.target
+User=prometheus
+Group=prometheus
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/usr/local/bin/nginx-prometheus-exporter \
+-nginx.scrape-uri http://localhost/nginx_status
+
+[Install]
+WantedBy=multi-user.target

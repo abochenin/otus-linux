@@ -1,0 +1,9 @@
+---
+# tasks file for web
+- include: common.yml
+- include: prom.yml
+- include: web.yml
+- include: wp.yml
+- include: mysql.yml
+- include: mysql-exporter.yml
+- include: nginx-exporter.yml

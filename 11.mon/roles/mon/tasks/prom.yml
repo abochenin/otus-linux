@@ -1,0 +1,46 @@
+---
+- name: Add repo
+  apt_key:
+    url: https://s3-eu-west-1.amazonaws.com/deb.robustperception.io/41EFC99D.gpg
+    state: present
+  tags: prom
+
+- name: Update
+  apt:
+    update_cache: yes
+  tags: prom
+
+- name: Install prom, etc.
+  apt:
+    name: "{{ packages }}"
+    state: latest
+  vars:
+    packages:
+      - prometheus
+      - prometheus-node-exporter
+      - prometheus-pushgateway
+      - prometheus-alertmanager
+  tags: prom
+
+
+- name: Copy prometheus conf file
+  copy:
+    src: prometheus.yml
+    dest: /etc/prometheus
+    owner: root
+    group: root
+    mode: 0644
+  tags: prom
+
+- name: Restart prometheus
+  service:
+    name: prometheus
+    state: restarted
+  tags: prom
+
+- name: Enable prometheus
+  service:
+    name: prometheus
+    enabled: yes
+  tags: prom
+

@@ -1,0 +1,76 @@
+---
+- name: Add official MySQL package authentication key
+  apt_key:
+    keyserver: pool.sks-keyservers.net
+    id: 5072E1F5
+    state: present
+  tags: mysql
+  
+- name: Add MySQL repository
+  apt_repository:
+    repo: deb http://repo.mysql.com/apt/debian/ stretch mysql-8.0
+    filename: mysql80
+    state: present
+  tags: mysql
+
+- name: Set MySQL root password
+  debconf:
+    name: mysql-community-server
+    question: mysql-community-server/root-pass
+    value: "{{ mysql_pwd }}"
+    vtype: password
+  tags: mysql
+
+
+- name: Confirm MySQL root password
+  debconf:
+    name: mysql-community-server
+    question: mysql-community-server/re-root-pass
+    value: "{{ mysql_pwd }}"
+    vtype: password
+  tags: mysql
+
+- name: Enable Legacy Authentication Method
+  debconf:
+    name: mysql-community-server
+    question: mysql-server/default-auth-override
+    value: Use Legacy Authentication Method (Retain MySQL 5.x Compatibility)
+    vtype: select
+  tags: mysql
+
+- name: Install/Update MySQL 8.0 Community Server
+  apt:
+    name: mysql-server
+    update_cache: yes
+    state: latest
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+  tags: mysql
+
+- name: Allow remote connect to the server
+  blockinfile:
+    path: /etc/mysql/my.cnf
+    block: |
+      [mysqld]
+      bind-address    = 0.0.0.0
+  notify: Restart mysql-server
+
+- name: Create root and allow remote connection 
+  shell: |
+    mysql -u 'root' -p"{{ mysql_pwd }}" -h 'localhost' --port='3306' -e "CREATE USER 'root'@'%' IDENTIFIED BY '"{{ mysql_pwd }}"'"
+    mysql -u 'root' -p"{{ mysql_pwd }}" -h 'localhost' --port='3306' -e "GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION"
+
+- name: Create wp database 
+  shell: mysql -u 'root' -p"{{ mysql_pwd }}" -h 'localhost' --port='3306' -e "CREATE DATABASE \`wp\` DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci"
+  tags: mysql
+
+- name: Create wp user and allow remote connect
+  shell: |
+    mysql -u 'root' -p"{{ mysql_pwd }}" -h 'localhost' --port='3306' -e "CREATE USER 'wp'@'%' IDENTIFIED BY '"{{ wp_pwd }}"'"
+    mysql -u 'root' -p"{{ mysql_pwd }}" -h 'localhost' --port='3306' -e "GRANT ALL PRIVILEGES ON wp.* TO 'wp'@'%' WITH GRANT OPTION"
+  tags: mysql
+
+- name: Create mysql exporter user
+  shell: | 
+    mysql -u 'root' -p"{{ mysql_pwd }}" -h 'localhost' --port='3306' -e "CREATE USER 'exp'@'%' IDENTIFIED BY '"{{ exp_pwd }}"'"
+    mysql -u 'root' -p"{{ mysql_pwd }}" -h 'localhost' --port='3306' -e "GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exp'@'%' WITH GRANT OPTION"

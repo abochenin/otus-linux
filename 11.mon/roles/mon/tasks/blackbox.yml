@@ -1,0 +1,39 @@
+---
+- name: Copy unit file
+  copy:
+    src: blackbox_exporter.service
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: 0644
+  tags: blackbox
+
+- name: Download blackbox exporter
+  get_url:
+    url: https://github.com/prometheus/blackbox_exporter/releases/download/v0.14.0/blackbox_exporter-0.14.0.linux-amd64.tar.gz
+    dest: /root/tmp
+  tags: blackbox
+
+- name: Unarchive blackbox-exporter
+  unarchive:
+    src: /root/tmp/blackbox_exporter-0.14.0.linux-amd64.tar.gz
+    dest: /usr/local/bin/
+    remote_src: yes
+  tags: blackbox
+
+- name: Reload daemon
+  systemd:
+    daemon_reload: yes
+  tags: blackbox
+
+- name: Enable blackbox-exporter
+  systemd:
+    name: blackbox_exporter
+    enabled: yes
+  tags: blackbox
+
+- name: Restart blackbox-exporter
+  systemd:
+    name: blackbox_exporter
+    state: restarted
+  tags: blackbox

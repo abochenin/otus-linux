@@ -1,0 +1,61 @@
+---
+- name: Create temp directory
+  file:
+    path: /root/tmp
+    state: directory
+    mode: 0755
+  tags: wordpress
+
+- name: Download wordpress
+  shell: wget -P /root/tmp http://wordpress.org/latest.tar.gz
+  tags: wordpress
+
+- name: Untar wp
+  shell: cd /root/tmp && tar -xvzf latest.tar.gz -C /var/www/html
+  tags: wordpress
+
+- name: Change html dir permissions
+  file:
+    path: /var/www/html
+    owner: www-data
+    group: www-data
+    mode: 0777
+    recurse: yes
+  tags: wordpress
+
+- name: Delete default config
+  file:
+    path: /etc/nginx/sites-available/default
+    state: absent
+  tags: wordpress
+
+- name: Delete default config
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  tags: wordpress
+
+
+
+- name: Copy wp conf
+  copy:
+    src: wp.conf
+    dest: /etc/nginx/sites-available
+    owner: root
+    group: root
+    mode: 0644
+  tags: wordpress
+
+- name: Create symlink
+  file:
+    src: /etc/nginx/sites-available/wp.conf
+    dest: /etc/nginx/sites-enabled/wp.conf
+    owner: root
+    group: root
+    state: link
+  notify: Restart nginx
+  tags: wordpress
+
+
+
+
