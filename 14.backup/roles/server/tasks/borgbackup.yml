@@ -1,0 +1,21 @@
+---
+- name: Установка пакетов
+  yum:
+    name: borgbackup
+    state: present
+  tags:
+    - packages
+    - borgbackup
+
+- name: Создаем пользователя borg
+  user:
+    name: borg
+    password: "{{ password | password_hash('sha512') }}"
+    state: present
+
+- name: Добавляем публичный ключ клиента для возможности захода на сервер без пароля
+  authorized_key:
+    user: borg
+    state: present
+    key: "{{ lookup('file', './files/client.pub') }}"
+

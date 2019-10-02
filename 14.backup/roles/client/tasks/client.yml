@@ -1,0 +1,34 @@
+---
+- name: Установка пакета borgbackup
+  yum:
+    name: borgbackup
+    state: present
+
+- name: Создаем каталог ~root/.ssh/
+  file:
+   path: /root/.ssh
+   state: directory
+   owner: root
+   group: root
+   mode: '700'
+   
+- name: Копируем приватный ключ клиента в домашний каталог ~root/.ssh/
+  copy:
+   src: ./files/client
+   dest: /root/.ssh/id_rsa
+   group: root
+   owner: root
+   mode: '600'
+
+- name: И обновляем known_hosts, чтобы избавиться от запроса подтверждения при первичном подключении
+  shell: ssh-keyscan -t rsa server >> /root/.ssh/known_hosts
+
+- name: Инициализируем бакап хранилище
+  shell:  borg init --encryption=none borg@server:backup
+  failed_when: false
+
+- name: И создаем задание планировщика для регулярного бакапа
+  cron:
+    name: etckeep
+    minute: "*/10"
+    job: 'borg create borg@server:backup::"etckeep-{now:\%Y-\%m-\%d_\%H:\%M:\%S}" /etc'
