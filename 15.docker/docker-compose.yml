@@ -1,0 +1,17 @@
+docker-compose.yml:
+version: '3.7'
+services:
+servicename:
+image: image_name
+ports:
+- "123:123"
+networks:
+- net_name
+servicename2:
+image: image_name
+ports:
+- "456:456"
+networks:
+- net_name
+networks:
+net_name
