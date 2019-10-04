@@ -8,6 +8,7 @@
 репозиторий.
 
 Команды которые могут понадобиться:
+```bash
 docker ps
 docker ps -a
 docker run -d -p port:port container_name
@@ -17,8 +18,10 @@ docker inspect container_name - информация по запущенному
 docker build -t dockerhub_login/reponame:ver
 docker push/pull
 docker exec -it container_name bash
+```
 
 Что должно быть Dockerfile:
+```bash
 FROM image name
 RUN apt update -y && apt upgrade -y
 COPY или ADD filename /path/in/image
@@ -26,23 +29,20 @@ EXPOSE portopenning
 CMD or ENTRYPOINT or both
 #не забываем про разницу между COPY и ADD
 #or - одна из опций на выбор
-
-Задание со * (звездочкой)
-Создайте кастомные образы nginx и php, объедините их в docker-compose.
-После запуска nginx должен показывать php info.
-Все собранные образы должны быть в docker hub
-
+```
 ---
 
 
 ## Описание
 Полезная команда для разбора какого-либо image из докерхаба, например nginx
-   docker history -H --no-trunc --format "{{.ID}} {{.CreatedAt}} {{.Size}} \t{{.CreatedBy}} {{.Comment}}" nginx
+```bash
+docker history -H --no-trunc --format "{{.ID}} {{.CreatedAt}} {{.Size}} \t{{.CreatedBy}} {{.Comment}}" nginx
+```
 
 или в сокращенном варианте, и обратной сортировке
 
 ```bash
- $ docker history -H --no-trunc --format "{{.CreatedBy}} " nginx|tac
+$ docker history -H --no-trunc --format "{{.CreatedBy}} " nginx|tac
 
 /bin/sh -c #(nop) ADD file:1901172d26545609083e48b9bfaf2cb46674f37af0902ad5a32e2420301225de in /
 /bin/sh -c #(nop)  CMD ["bash"]
@@ -66,33 +66,60 @@ EXPOSE 80
 CMD ["nginx" "-g" "daemon off;"]
 ```
 
+Итоговый Dockerfile после многочисленных тестовых попыток
+```bash
+FROM alpine
+MAINTAINER abochenin
+COPY . /
+#RUN echo "nameserver 11.22.33.44" > /etc/resolv.conf&& apk update && apk upgrade && apk add nginx
+RUN apk update && apk upgrade && apk add nginx
+RUN ln -sf /dev/stdout /var/log/nginx/access.log
+RUN ln -sf /dev/stderr /var/log/nginx/error.log
+RUN sed s/Welcome\ to/Welcome\ OTUS\ to/g -i /var/lib/nginx/html/index.html
+COPY default.conf /etc/nginx/conf.d/default.conf
+RUN mkdir /run/nginx
+RUN chown nginx:nginx /run/nginx
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
 Наткнулся на необычное (для меня, только начинающего изучать докер) поведение. В моем окружении корпоративный 
 файрвол ограничивает доступ к публичным DNS серверам 8.8.4.4 и т.п. Поскольку в контейнере по умолчанию используется как раз гугловый
 днс, я пытался изменить его разными способами, вставляя в dockerfile команды
-   RUN echo "nameserver 11.22.33.44" > /etc/resolv.conf
-   или COPY nameserver /etc/resolv.conf
+```bash
+RUN echo "nameserver 11.22.33.44" > /etc/resolv.conf
+или COPY nameserver /etc/resolv.conf
+```
 Но оказывается, эти изменения действуют только на данном шаге, а на следующем - содержимое файла /etc/resolv.conf 
-опять сброшено на умолчательное. Пришлось соединять команды в одну строку.
+опять сброшено на умолчательное. Для меня это было не очевидно... Пришлось соединять команды в одну строку.
 
 Позднее нашел в документации объяснение подобного поведения https://docs.docker.com/v17.09/engine/userguide/networking/configure-dns/
 
 Собираем образ
-   docker build  -t abochenin/otus:0.7 .
+```bash
+docker build  -t abochenin/otus:0.7 .
+```
 
 Отправляем образ в хранилище
-   $ docker login
-   $ docker push abochenin/otus:0.7
+```bash
+$ docker login
+$ docker push abochenin/otus:0.7
+```
 
 ## Проверки
 Запуск контейнера
+```bash
 $ docker run -it -p 80:80 abochenin/otus:0.7
+```
 
 В браузере или в другой консоли пытаемся обратиться к localhost
+```bash
 $ curl localhost 
 <!DOCTYPE html>
 <html>
 <head>
 <title>Welcome OTUS to nginx!</title>
+```
 
 При этом в консоли, где запущен контейнер, видны сообщения из access.log
 ```bash
@@ -102,7 +129,9 @@ $ docker run -it -p 80:80 abochenin/otus:0.7
 ```
 
 Вопрос: Определите разницу между контейнером и образом
+
 Образ - это шаблон (файл), а контейнеры - конкретные экземпляры (процессы) на основе образа
 
 Вопрос:Можно ли в контейнере собрать ядро?
+
 Собрать можно, но установить ядро - думаю, не выйдет, т.к. все контейнеры работают под упралением докер-демона и на едином ядре хост-системы.
