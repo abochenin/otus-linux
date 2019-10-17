@@ -1,0 +1,13 @@
+---
+- name: настройка web
+  hosts: web
+  become: true
+  roles:
+    - role: web
+
+- name: Настройка log
+  hosts: log
+  become: true
+  roles:
+    - role: log
+

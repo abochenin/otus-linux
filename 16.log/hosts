@@ -1,0 +1,2 @@
+web ansible_host=192.168.50.11
+log ansible_host=192.168.50.12

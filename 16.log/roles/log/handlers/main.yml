@@ -1,0 +1,23 @@
+---
+- name: restart rsyslog
+  systemd:
+    name: rsyslog
+    state: restarted
+    enabled: yes
+
+- name: restart nginx
+  systemd:
+    name: nginx
+    state: restarted
+    enabled: yes
+
+#- name: restart auditd
+#  systemd:
+#    name: auditd
+#    state: started
+#    enabled: yes
+
+- name: restart auditd
+  command: service auditd restart
+  args:
+    warn: false

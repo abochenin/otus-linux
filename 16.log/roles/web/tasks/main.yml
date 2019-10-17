@@ -1,0 +1,69 @@
+---
+- include: common.yml
+
+#yum install rsyslog
+#yum install nginx
+#yum install audispd-plugins
+#copy files/rsyslog-web.conf /etc/rsyslog.conf
+#copy files/au-remote.conf /etc/audisp/plugins.d/au-remote.conf
+#copy files/audisp-remote /etc/audisp/audisp-remote.conf
+#auditctl -w /etc/nginx/nginx.conf -k web_changed_nginx.conf -p w
+
+- name: Установка пакетов rsyslog и nginx
+  yum:
+    name:
+      - rsyslog
+      - nginx
+      - audispd-plugins
+    state: present
+
+
+- name: Копируем nginx.conf в /etc/nginx/
+  copy:
+   src: ./files/nginx.conf
+   dest: /etc/nginx/nginx.conf
+   group: root
+   owner: root
+   mode: '644'
+  notify: restart nginx
+
+- name: Копируем rsyslog.conf в /etc/
+  copy:
+   src: ./files/rsyslog-web.conf
+   dest: /etc/rsyslog.conf
+   group: root
+   owner: root
+   mode: '644'
+  notify: restart rsyslog
+
+- name: Включаем пересылку аудита на удаленный сервер
+  replace:
+    path: /etc/audisp/plugins.d/au-remote.conf
+    regexp: '^active = no'
+    replace: 'active = yes'
+  notify: restart auditd
+
+- name: Настраиваем адрес сервера для пересылки аудита на удаленный сервер
+  replace:
+    path: /etc/audisp/audisp-remote.conf
+    regexp: '^remote_server =.*'
+    replace: 'remote_server = 192.168.50.12'
+  notify: restart auditd
+
+
+- name: Копируем audit.rules /etc/audit
+  copy:
+   src: ./files/audit.rules
+   dest: /etc/audit/rules.d/audit.rules
+   group: root
+   owner: root
+   mode: '600'
+  notify: restart auditd
+
+
+#- name: Очищаем правила аудита
+#  command: auditctl -D
+
+#- name: Включаем аудит событий (попытки записи в файл nginx.conf)
+#  command: auditctl -w /etc/nginx/nginx.conf -k web_changed_nginx.conf -p w
+

@@ -1,0 +1,72 @@
+---
+- include: common.yml
+
+#systemctl start systemd-journal-gatewayd
+
+#copy files/rsyslog-log.conf /etc/rsyslog.conf
+#systemctl start rsyslog
+#cp files/auditd.conf /etc/audit/auditd.conf
+
+- name: Установка пакетов
+  yum:
+    name: rsyslog
+    state: present
+  tags:
+    - packages
+    - rsyslog
+
+- name: Включаем прием syslog по udp [1/2]
+  replace:
+    path: /etc/rsyslog.conf
+    regexp: '#\$ModLoad imudp'
+    replace: '$ModLoad imudp'
+  notify: restart rsyslog
+
+- name: Включаем прием syslog по udp [2/2]
+  replace:
+    path: /etc/rsyslog.conf
+    regexp: '#\$UDPServerRun 514'
+    replace: '$UDPServerRun 514'
+  notify: restart rsyslog
+
+- name: Включаем прием syslog по tcp [1/2]
+  replace:
+    path: /etc/rsyslog.conf
+    regexp: '#\$ModLoad imtcp'
+    replace: '$ModLoad imtcp'
+  notify: restart rsyslog
+
+- name: Включаем прием syslog по tcp [2/2]
+  replace:
+    path: /etc/rsyslog.conf
+    regexp: '#\$InputTCPServerRun 514'
+    replace: '$InputTCPServerRun 514'
+  notify: restart rsyslog
+
+- name: Включаем прием аудита от удаленных систем
+  replace:
+    path: /etc/audit/auditd.conf
+    regexp: '##tcp_listen_port = 60'
+    replace: 'tcp_listen_port = 60'
+  notify: restart auditd
+
+
+#- name: Создаем каталог ~root/.ssh/
+#  file:
+#   path: /root/.ssh
+#   state: directory
+#   owner: root
+#   group: root
+#   mode: '700'#
+
+#- name: Копируем приватный ключ клиента в домашний каталог ~root/.ssh/
+#  copy:
+#   src: ./files/client
+#   dest: /root/.ssh/id_rsa
+#   group: root
+#   owner: root
+#   mode: '600'#
+
+#- name: И обновляем known_hosts, чтобы избавиться от запроса подтверждения при первичном подключении
+#  shell: ssh-keyscan -t rsa server >> /root/.ssh/known_hosts
+

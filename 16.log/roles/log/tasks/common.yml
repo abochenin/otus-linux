@@ -1,0 +1,61 @@
+---
+- name: Подключение репо EPEL Repo
+  yum:
+    name: epel-release
+    state: present
+  tags:
+    - epel-package
+    - packages
+
+
+- name: Установка пакетов
+  yum:
+    name:
+      - mc
+      - vim
+      - systemd-journal-gateway
+      - rsyslog
+    state: present
+  tags:
+    - packages
+
+- name: Добавление записей в /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ item }}"
+  with_items:
+     - '192.168.50.11 web'
+     - '192.168.50.12 log'
+
+#- name: NGINX | Создание конфигурационного файла nginx.conf из темплейта
+#  template:
+#    src: nginx.conf.j2
+#    dest: /etc/nginx/nginx.conf
+#  notify:
+#    - reload nginx
+#  tags:
+#    - nginx-configuration
+#.
+#
+#- name: Create temp directory
+#  file:
+#    path: /root/tmp
+#    state: directory
+#  tags: common
+#
+#- name: Set dns to resolv.conf
+#  lineinfile:
+#    path: /etc/resolv.conf
+#    regexp: '^nameserver'
+#    state: absent
+#  tags: common
+#
+#- name: Add DNS servers
+#  blockinfile:
+#    path: /etc/resolv.conf
+#    block: |
+#      nameserver 127.0.0.53
+##      nameserver 8.8.8.8
+##      nameserver 1.1.1.1
+#  tags: common
+#
