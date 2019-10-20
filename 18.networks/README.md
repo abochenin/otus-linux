@@ -136,3 +136,29 @@ rtt min/avg/max/mdev = 47.618/47.618/47.618/0.000 ms
         /30 - 2
 Если учесть, что один адрес в сети обычно занят под шлюз, полезных адресов, соответственно, чуть меньше.
 
+## Схема сети
+```bash
+office1server
+eth1=192.168.2.66/26 ---+
+                        |  office1router
+                        |  eth1=192.168.2.1/26   o1-dev
+                        +--eth2=192.168.2.65/26  o1-test-servers
+                           eth3=192.168.2.129/26 o1-managers
+                           eth4=192.168.2.193/26 o1-office-hardware
+                           eth5=192.168.255.6/30 router-net    --------+
+                                                                       |                                                 inetRouter
+                                                                       |   central-router                                eth0=WAN uplink (nat)
+                                                                       |   eth1=192.168.255.2/30  router-net ------------eth1=192.168.255.1/30
+                                                                       +------- 192.168.255.5/30
+CENTRAL-SERVER                                                         +------- 192.168.255.9/30
+eth1=192.168.0.2/28 dir-net -------------------------------------------|-- eth2=192.168.0.1/28    dir-net
+eth2=auto                                                              |   eth3=192.168.0.33/28   hw-net
+eth3=auto                                                              |   eth4=192.168.0.65/26   mgt-net
+                                                                       |
+                                                                       |
+                           office2router                               |
+office2server              eth1=192.168.1.1/25    o2-dev               |
+eth1=192.168.1.130/26------eth2=192.168.1.129/26  o2-test-servers      |
+                           eth3=192.168.1.193/26  o2-ofice-hardware    |
+                           eth4=192.168.255.10/30 router-net    -------+
+```
