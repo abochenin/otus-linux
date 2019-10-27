@@ -8,19 +8,6 @@ LDAP
 
 ---
 
-yum install ipa-server ipa-server-dns
-echo "192.168.50.10 ipa.otus.lan ipa" >> /etc/hosts
-поменять в /etc/hosts 127.0.0.1 на 192.168.50.10 ipa.otus.lan ipa
-yum install -y ipa-server-trust-ad bind bind-dyndb-ldap
-
-ipa-server-install  --realm=OTUS.LAN --domain=otus.lan --hostname=ipa.otus.lan --ds-password=admin123 --admin-password=admin123 --mkhomedir --ssh-trust-dns --setup-dns --unattended --auto-forwarders --auto-reverse --no-host-dns --no-dnssec-validation
-
-CLIENT
-yum install ipa-client -y
-поменять в /etc/hosts 127.0.0.1 на 192.168.50.11 client.otus.lan ipa
-добавить 192.168.50.10 ipa.otus.lan
-ipa-client-install --unattend --mkhomedir --enable-dns-updates --principal=admin --password=admin123 --domain=otus.lan --server=ipa.otus.lan --realm=OTUS.LAN
-
 ## Подготовка
 Создаем виртуалки, набираемся терпения. Шаг установки сервера FreeIPA выполянется долго, минут 5-10...
 ```bash
@@ -47,7 +34,7 @@ Valid starting       Expires              Service principal
 10/25/2019 20:43:57  10/26/2019 20:43:52  krbtgt/OTUS.LAN@OTUS.LAN
 ```
 
-Создаем пользователя jbond
+Создаем пользователя user
 
 ```bash
 [root@ipa ~]# ipa user-add --first="User"  --last="Otus" --cn="User Otus" user
