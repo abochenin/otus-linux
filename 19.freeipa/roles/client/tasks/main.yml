@@ -1,0 +1,60 @@
+---
+
+- name: Подключение репо EPEL Repo
+  yum:
+    name: epel-release
+    state: present
+  tags:
+    - epel-package
+    - packages
+
+- name: Установка пакетов
+  yum:
+    name:
+      - mc
+      - vim
+      - ipa-client 
+    state: present
+  tags:
+    - packages
+
+- name: Исправляем запись в /etc/hosts, меняем 127.0.0.1 на реальный IP
+  replace:
+    path: /etc/hosts
+    regexp: '127.0.0.1.*'
+    replace: '192.168.50.11 client.otus.lan client'
+
+- name: Добавление записей в /etc/hosts
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ item }}"
+  with_items:
+     - '192.168.50.10 ipa.otus.lan ipa'
+#     - '192.168.50.11 client.otus.lan client'
+
+
+- name: Установка FreeIPA клиента
+#  ignore_errors: true
+  shell: "ipa-client-install --unattend --mkhomedir --enable-dns-updates --principal=admin \
+                             --password=admin123 --domain=otus.lan --server=ipa.otus.lan --realm=OTUS.LAN"
+
+
+#- name: Создаем каталог ~root/.ssh/
+#  file:
+#   path: /root/.ssh
+#   state: directory
+#   owner: root
+#   group: root
+#   mode: '700'#
+
+#- name: Копируем приватный ключ клиента в домашний каталог ~root/.ssh/
+#  copy:
+#   src: ./files/client
+#   dest: /root/.ssh/id_rsa
+#   group: root
+#   owner: root
+#   mode: '600'#
+
+#- name: И обновляем known_hosts, чтобы избавиться от запроса подтверждения при первичном подключении
+#  shell: ssh-keyscan -t rsa server >> /root/.ssh/known_hosts
+

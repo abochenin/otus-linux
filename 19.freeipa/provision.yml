@@ -1,0 +1,13 @@
+---
+- name: настройка FreeIPA сервера
+  hosts: ipa
+  become: true
+  roles:
+    - role: ipa
+
+- name: Настройка клиента freeipa
+  hosts: client
+  become: true
+  roles:
+    - role: client
+

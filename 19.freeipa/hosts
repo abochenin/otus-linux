@@ -1,0 +1,2 @@
+ipa ansible_host=192.168.50.10
+client ansible_host=192.168.50.11
