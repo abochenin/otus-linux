@@ -45,7 +45,8 @@ Protocol mismatch.
 [root@centralRouter ~]#
 ```
 
-
+Внешний мир доступен через inerRouter, что и требовалось
+```bash
 [root@centralRouter ~]# traceroute -I 8.8.4.4
 traceroute to 8.8.4.4 (8.8.4.4), 30 hops max, 60 byte packets
  1  gateway (192.168.255.1)  0.192 ms  0.227 ms  0.199 ms
@@ -68,9 +69,10 @@ traceroute to 8.8.4.4 (8.8.4.4), 30 hops max, 60 byte packets
 18  * * *
 19  * * *
 20  dns.google (8.8.4.4)  59.939 ms  60.398 ms  60.869 ms
+```
 
-
-# проверка curl 192.168.254.1:8080, должна быть веб-страница
+Осталось проверить port address translation, доступность nginx через inetRouter2:8080
+```bash
 [root@centralRouter ~]# curl -I 192.168.254.1:8080
 HTTP/1.1 200 OK
 Server: nginx/1.16.1
@@ -81,7 +83,7 @@ Last-Modified: Fri, 16 May 2014 15:12:48 GMT
 Connection: keep-alive
 ETag: "53762af0-12e1"
 Accept-Ranges: bytes
-
+```
 
 ## Схема сети
 ```bash
