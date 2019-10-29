@@ -1,7 +1,7 @@
 # https://wiki.archlinux.org/index.php/Port_knocking
 *filter
 :INPUT DROP [0:0]
-:FORWARD DROP [0:0]
+:FORWARD ACCEPT [0:0]
 :OUTPUT ACCEPT [0:0]
 :TRAFFIC - [0:0]
 :SSH-INPUT - [0:0]

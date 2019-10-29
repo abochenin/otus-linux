@@ -103,7 +103,7 @@ Vagrant.configure("2") do |config|
           box.vm.provision "shell", run: "always", inline: <<-SHELL
             sysctl net.ipv4.conf.all.forwarding=1
             iptables -t nat -A POSTROUTING ! -d 192.168.0.0/16 -o eth0 -j MASQUERADE
-            ip r add 192.168.0.0/16 via 192.168.255.2
+            ip r add 192.168.0.0/16 via 192.168.254.2
             iptables -t nat -A PREROUTING -i eth1 -p tcp --dport 8080 -j DNAT --to-destination 192.168.0.2:80
             iptables -t nat -A POSTROUTING -o eth1 -p tcp --dst 192.168.0.2 --dport 80 -j SNAT --to-source 192.168.254.1
             SHELL
@@ -121,7 +121,7 @@ Vagrant.configure("2") do |config|
             ip r add 192.168.1.0/24 via 192.168.255.10
             ip r add 192.168.2.0/24 via 192.168.255.6
             yum install -y epel-release
-            yum install -y nmap
+            yum install -y nmap socat traceroute curl
             SHELL
         when "centralServer"
           box.vm.provision "shell", run: "always", inline: <<-SHELL

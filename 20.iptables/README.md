@@ -22,17 +22,65 @@ vagrant up
 В соответствии с заданием, добавлен хост inetRouter2
 
 заходим на centralRouter
+```bash
+$ vagrant ssh centralRouter
+```
+
 Проверяем открыт ли порт ssh на inetRouter, убеждаемся что порт закрыт
-# netcat -v 192.168.255.1 22
+```bash
+[root@centralRouter ~]# socat - TCP4:192.168.255.1:22
+^C
+```
+Пробуем постучаться
+```bash
+[root@centralRouter ~]# /vagrant/knock.sh 192.168.255.1 8881 7777 9991
+```
 
-Стучимся, заходим после стука
-# /vagrant/knock.sh 192.168.255.1 8881 7777 9991
-# ssh vagrant@192.168.255.1
+И снова тестируем порт. Видим приглашаение SSH к сесии, что значит порт открылся (на короткое время)
+```bash
+[root@centralRouter ~]# socat - TCP4:192.168.255.1:22
+SSH-2.0-OpenSSH_5.3
+qwerty
+Protocol mismatch.
+[root@centralRouter ~]#
+```
 
-# tracepath -n 8.8.8.8
+
+[root@centralRouter ~]# traceroute -I 8.8.4.4
+traceroute to 8.8.4.4 (8.8.4.4), 30 hops max, 60 byte packets
+ 1  gateway (192.168.255.1)  0.192 ms  0.227 ms  0.199 ms
+ 2  * * *
+ 3  * * *
+ 4  178.34.128.88 (178.34.128.88)  20.739 ms  21.252 ms  22.358 ms
+ 5  178.34.130.150 (178.34.130.150)  22.322 ms  22.824 ms  23.454 ms
+ 6  87.226.183.89 (87.226.183.89)  50.581 ms  43.536 ms  43.803 ms
+ 7  5.143.253.245 (5.143.253.245)  44.294 ms  44.576 ms  45.791 ms
+ 8  108.170.250.34 (108.170.250.34)  46.361 ms  46.895 ms  47.263 ms
+ 9  216.239.50.46 (216.239.50.46)  63.257 ms  58.947 ms  58.903 ms
+10  216.239.54.50 (216.239.54.50)  56.248 ms  56.465 ms  55.981 ms
+11  * * *
+12  * * *
+13  * * *
+14  * * *
+15  * * *
+16  * * *
+17  * * *
+18  * * *
+19  * * *
+20  dns.google (8.8.4.4)  59.939 ms  60.398 ms  60.869 ms
 
 
 # проверка curl 192.168.254.1:8080, должна быть веб-страница
+[root@centralRouter ~]# curl -I 192.168.254.1:8080
+HTTP/1.1 200 OK
+Server: nginx/1.16.1
+Date: Tue, 29 Oct 2019 20:38:18 GMT
+Content-Type: text/html
+Content-Length: 4833
+Last-Modified: Fri, 16 May 2014 15:12:48 GMT
+Connection: keep-alive
+ETag: "53762af0-12e1"
+Accept-Ranges: bytes
 
 
 ## Схема сети
