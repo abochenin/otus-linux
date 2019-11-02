@@ -1,0 +1,13 @@
+---
+- name: "restart zebra"
+  service:
+    name: "zebra"
+    state: "restarted"
+    enabled: yes
+
+- name: "restart ospfd"
+  service:
+    name: "ospfd"
+    state: "restarted"
+    enabled: yes
+    

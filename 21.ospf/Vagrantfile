@@ -1,0 +1,105 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+MACHINES = {
+  :R1 => {
+        :box_name => "centos/7",
+        #:public => {:ip => '10.10.10.1', :adapter => 1},
+        :net => [
+#                   {ip: '192.168.50.11', adapter: 2, netmask: "255.255.255.0", virtualbox__intnet: "net12"},
+                   {ip: '192.168.12.1', adapter: 2, netmask: "255.255.255.0", virtualbox__intnet: "net12"},
+                   {ip: '192.168.13.1', adapter: 3, netmask: "255.255.255.0", virtualbox__intnet: "net13"},
+                   {ip: '192.168.101.1', adapter: 4, netmask: "255.255.255.0", virtualbox__intnet: "net101"},
+                ]
+  },
+  :R2 => {
+        :box_name => "centos/7",
+        :net => [
+#                   {ip: '192.168.50.12', adapter: 2, netmask: "255.255.255.0", virtualbox__intnet: "net12"},
+                   {ip: '192.168.12.2', adapter: 2, netmask: "255.255.255.0", virtualbox__intnet: "net12"},
+                   {ip: '192.168.23.2', adapter: 3, netmask: "255.255.255.0", virtualbox__intnet: "net23"},
+                   {ip: '192.168.102.1', adapter: 4, netmask: "255.255.255.0", virtualbox__intnet: "net102"},
+                ]
+  },
+  :R3 => {
+        :box_name => "centos/7",
+        :net => [
+#                   {ip: '192.168.50.13', adapter: 2, netmask: "255.255.255.0", virtualbox__intnet: "net13"},
+                   {ip: '192.168.13.3', adapter: 2, netmask: "255.255.255.0", virtualbox__intnet: "net13"},
+                   {ip: '192.168.23.3', adapter: 3, netmask: "255.255.255.0", virtualbox__intnet: "net23"},
+                   {ip: '192.168.103.1', adapter: 4, netmask: "255.255.255.0", virtualbox__intnet: "net103"},
+#                   {adapter: 3, auto_config: false, virtualbox__intnet: true},
+#                   {adapter: 4, auto_config: false, virtualbox__intnet: true},
+                ]
+  },
+}
+
+Vagrant.configure("2") do |config|
+  MACHINES.each do |boxname, boxconfig|
+    config.vm.define boxname do |box|
+        box.vm.box = boxconfig[:box_name]
+        box.vm.host_name = boxname.to_s
+
+        boxconfig[:net].each do |ipconf|
+          box.vm.network "private_network", ipconf
+        end
+
+        if boxconfig.key?(:public)
+          box.vm.network "public_network", boxconfig[:public]
+        end
+
+        box.vm.provider :virtualbox do |vb|
+          vb.customize ["modifyvm", :id, "--memory", "256"]
+        end
+
+        box.vm.provision "shell", inline: <<-SHELL
+          mkdir -p ~root/.ssh
+                cp ~vagrant/.ssh/auth* ~root/.ssh
+        SHELL
+
+        case boxname.to_s
+        when "R1"
+#          box.vm.provision "shell", run: "always", inline: <<-SHELL
+#            sysctl net.ipv4.conf.all.forwarding=1
+#            iptables -t nat -A POSTROUTING ! -d 192.168.0.0/16 -o eth0 -j MASQUERADE
+#            ip r add 192.168.0.0/16 via 192.168.255.2
+#            SHELL
+        when "R2"
+#          box.vm.provision "shell", run: "always", inline: <<-SHELL
+#            sysctl net.ipv4.conf.all.forwarding=1
+#            echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0 
+#            echo "GATEWAY=192.168.255.1" >> /etc/sysconfig/network-scripts/ifcfg-eth1
+#            systemctl restart network
+#            ip addr add 192.168.255.5/30 dev eth1
+#            ip addr add 192.168.255.9/30 dev eth1
+#            ip r del default
+#            ip r add default via 192.168.255.1
+#            ip r add 192.168.1.0/24 via 192.168.255.10
+#            ip r add 192.168.2.0/24 via 192.168.255.6
+#            SHELL
+        when "R3"
+#          box.vm.provision "shell", run: "always", inline: <<-SHELL
+#            sysctl net.ipv4.conf.all.forwarding=1
+#            echo "DEFROUTE=no" >> /etc/sysconfig/network-scripts/ifcfg-eth0 
+#            echo "GATEWAY=192.168.0.1" >> /etc/sysconfig/network-scripts/ifcfg-eth1
+#            systemctl restart network
+#            ip r del default
+#            ip r add default via 192.168.0.1
+#            SHELL
+
+        end
+
+      end
+
+  end
+
+  config.vm.provision "ansible" do |ansible|
+#    ansible.verbose = "v"
+    ansible.playbook = "provision.yml"
+  end
+
+end
+
+

@@ -1,0 +1,125 @@
+---
+
+- name: Подключение репо EPEL Repo
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: Установка пакетов
+  yum:
+    name:
+      - mc
+      - vim
+      - quagga
+      - net-tools
+      - telnet
+    state: present
+  tags:
+    - packages
+
+#- name: Добавление записей в /etc/hosts
+#  lineinfile:
+#    path: /etc/hosts
+#    line: "{{ item }}"
+#  with_items:
+#     - '192.168.50.10 ipa.otus.lan ipa'
+#     - '192.168.50.11 client.otus.lan client'
+
+- name: Исправляем запись в /etc/hosts, меняем 127.0.0.1 на реальный IP
+  replace:
+    path: /etc/hosts
+    regexp: '127.0.0.1.*'
+    replace: '192.168.50.10 ipa.otus.lan ipa'
+
+- name: Копирование скрипта zebra r1
+  copy:
+    src: r1-zebra.conf
+    dest: /etc/quagga/zebra.conf
+    mode: '0640'
+    owner: quagga
+    group: quagga
+  when: ansible_hostname == "R1"
+  notify: restart zebra
+
+- name: Копирование скрипта ospfd r1
+  copy:
+    src: r1-ospfd.conf
+    dest: /etc/quagga/ospfd.conf
+    mode: '0640'
+    owner: quagga
+    group: quagga
+  when: ansible_hostname == "R1"
+  notify: restart ospfd
+
+- name: Копирование скрипта zebra r2
+  copy:
+    src: r2-zebra.conf
+    dest: /etc/quagga/zebra.conf
+    mode: '0640'
+    owner: quagga
+    group: quagga
+  when: ansible_hostname == "R2"
+  notify: restart zebra
+
+- name: Копирование скрипта ospfd r2
+  copy:
+    src: r2-ospfd.conf
+    dest: /etc/quagga/ospfd.conf
+    mode: '0640'
+    owner: quagga
+    group: quagga
+  when: ansible_hostname == "R2"
+  notify: restart ospfd
+
+- name: Копирование скрипта zebra r3
+  copy:
+    src: r3-zebra.conf
+    dest: /etc/quagga/zebra.conf
+    mode: '0640'
+    owner: quagga
+    group: quagga
+  when: ansible_hostname == "R3"
+  notify: restart zebra
+
+- name: Копирование скрипта ospfd r3
+  copy:
+    src: r3-ospfd.conf
+    dest: /etc/quagga/ospfd.conf
+    mode: '0640'
+    owner: quagga
+    group: quagga
+  when: ansible_hostname == "R3"
+  notify: restart ospfd
+
+#- name: Установка FreeIPA сервер
+#  ignore_errors: true
+#  shell: "ipa-server-install --realm=OTUS.LAN --domain=otus.lan --hostname=ipa.otus.lan \
+#                             --ds-password=admin123 --admin-password=admin123 \
+#                             --mkhomedir --ssh-trust-dns --setup-dns --unattended \
+#                             --auto-forwarders --auto-reverse --no-host-dns --no-dnssec-validation"
+
+
+
+
+
+
+#- name: Создаем каталог ~root/.ssh/
+#  file:
+#   path: /root/.ssh
+#   state: directory
+#   owner: root
+#   group: root
+#   mode: '700'#
+
+#- name: Копируем приватный ключ клиента в домашний каталог ~root/.ssh/
+#  copy:
+#   src: ./files/client
+#   dest: /root/.ssh/id_rsa
+#   group: root
+#   owner: root
+#   mode: '600'#
+
+#- name: И обновляем known_hosts, чтобы избавиться от запроса подтверждения при первичном подключении
+#  shell: ssh-keyscan -t rsa server >> /root/.ssh/known_hosts
+

@@ -1,0 +1,8 @@
+---
+- name: Установка и настройка zebra
+  strategy: free
+  hosts: all
+  become: true
+  roles:
+    - role: zebra
+
