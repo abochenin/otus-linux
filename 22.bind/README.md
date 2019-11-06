@@ -31,8 +31,8 @@ vagrant up
 Проверим, что первый клиент видит обе зоны, но в зоне dns.lab только web1
 ```bash
 [vagrant@client ~]$ host www.newdns.lab.
-www.newdns.lab has address 192.168.60.16
 www.newdns.lab has address 192.168.50.15
+www.newdns.lab has address 192.168.50.16
 
 [vagrant@client ~]$ host web1.dns.lab.
 web1.dns.lab has address 192.168.50.15
