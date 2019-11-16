@@ -26,6 +26,10 @@ testClient2 <-> testServer2
 ```bash
 vagrant up
 ```
+Схема сети
+
+![network](https://github.com/abochenin/otus-linux/blob/master/23.bonding/images/bonding.png)
+
 ## Проверки
 
 Для проверки bonding зайдем на centralRouter, и на inetRouter. 
