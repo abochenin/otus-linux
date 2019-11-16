@@ -1,0 +1,10 @@
+DEVICE=bond0
+NAME=bond0
+TYPE=Bond
+BONDING_MASTER=yes
+BONDING_OPTS="mode=1 miimon=100 fail_over_mac=1"
+BOOTPROTO=static
+ONBOOT=yes
+USERCTL=no
+IPADDR=192.168.255.1
+PREFIX=30

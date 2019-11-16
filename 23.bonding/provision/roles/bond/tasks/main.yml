@@ -1,0 +1,161 @@
+---
+
+- name: Подключение репо EPEL Repo
+  yum:
+    name: epel-release
+    state: present
+
+
+- name: Установка пакетов
+  yum:
+    name:
+      - mc
+      - vim
+      - net-tools
+      - telnet
+      - tcpdump
+    state: present
+  tags:
+    - packages
+
+- name: Подгружаем модуль bonding
+  modprobe:
+    name: bonding
+    state: present
+  when: inventory_hostname == "inetRouter" or
+        inventory_hostname == "centralRouter"
+
+
+#--------------------------------------------------- inetRouter
+- name: настраиваем интерфейсы для inetRouter
+  when: inventory_hostname == "inetRouter"
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: "ifcfg-eth1.bonding", dest: "/etc/sysconfig/network-scripts/ifcfg-eth1" }
+    - { src: "ifcfg-eth2.bonding", dest: "/etc/sysconfig/network-scripts/ifcfg-eth2" }
+    - { src: "ifcfg-bond0.inetRouter", dest: "/etc/sysconfig/network-scripts/ifcfg-bond0" }
+    - { src: "route-bond0.inetRouter", dest: "/etc/sysconfig/network-scripts/route-bond0" }
+  notify: restart network
+
+# Модуль не работает, жаль. Пришлось пролему с маршрутами решать через файлы route-*
+#- name: Добавляем статические маршруты на inetRouter
+#  net_static_route:
+#    aggregate:
+#      - { prefix: 192.168.0.0, mask 255.255.0.0, next_hop: 192.168.255.2 }
+#      - { prefix: 10.0.0.0, mask 255.0.0.0, next_hop: 192.168.255.2 }
+#  when: inventory_hostname == "inetRouter"
+
+- name: Включение masquerade для inetRouter для общего канала в интернет
+  when: inventory_hostname == "inetRouter"
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: eth0
+#    protocol: tcp
+#    match: tcp
+    destination: '! 192.168.0.0/16'
+    jump: MASQUERADE
+
+#--------------------------------------------------- centralRouter
+- name: настраиваем интерфейсы для centralRouter
+  when: inventory_hostname == "centralRouter"
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: "ifcfg-eth1.bonding", dest: "/etc/sysconfig/network-scripts/ifcfg-eth1" }
+    - { src: "ifcfg-eth2.bonding", dest: "/etc/sysconfig/network-scripts/ifcfg-eth2" }
+    - { src: "ifcfg-bond0.centralRouter", dest: "/etc/sysconfig/network-scripts/ifcfg-bond0" }
+    - { src: "route-bond0.centralRouter", dest: "/etc/sysconfig/network-scripts/route-bond0" }
+    - { src: "ifcfg-eth3.centralRouter", dest: "/etc/sysconfig/network-scripts/ifcfg-eth3" }
+    - { src: "route-eth3.centralRouter", dest: "/etc/sysconfig/network-scripts/route-eth3" }
+  notify: restart network
+
+#--------------------------------------------------- officeRouter
+- name: настройка интерфейов для officeRouter
+  when: inventory_hostname == "officeRouter"
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: "ifcfg-eth1.100.officeRouter", dest: "/etc/sysconfig/network-scripts/ifcfg-eth1.100" }
+    - { src: "ifcfg-eth1.101.officeRouter", dest: "/etc/sysconfig/network-scripts/ifcfg-eth1.101" }
+    - { src: "ifcfg-eth3.officeRouter", dest: "/etc/sysconfig/network-scripts/ifcfg-eth3" }
+#    - { src: "route-eth3.officeRouter", dest: "/etc/sysconfig/network-scripts/route-eth3" }
+  notify: restart network
+
+#- name: Создаем macvlan интерфейсы 1/2
+#  when: inventory_hostname == "officeRouter" 
+#  command: /sbin/ip link add eth1.100 link eth1 type macvlan mode bridge
+#  ignore_errors: True
+
+#- name: Создаем macvlan интерфейсы 2/2
+#  when: inventory_hostname == "officeRouter" 
+#  command: /sbin/ip link add eth1.101 link eth1 type macvlan mode bridge
+#  ignore_errors: True
+
+- name: Включение masquerade для officeRouter
+  when: inventory_hostname == "officeRouter"
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    out_interface: eth3
+#    protocol: tcp
+#    match: tcp
+    destination: '! 10.0.0.0/8'
+    jump: MASQUERADE
+
+#--------------------------------------------------- test*
+- name: Копирование настроек vlan для testClient1
+  when: ansible_hostname == "testClient1"
+  copy:
+    src: "ifcfg-eth1.testClient1"
+    dest: /etc/sysconfig/network-scripts/ifcfg-eth1.100
+  notify: restart network
+
+- name: Копирование настроек vlan для testServer1
+  when: ansible_hostname == "testServer1"
+  copy:
+    src: "ifcfg-eth1.testServer1"
+    dest: /etc/sysconfig/network-scripts/ifcfg-eth1.100
+  notify: restart network
+
+- name: Копирование настроек vlan для testClient2
+  when: ansible_hostname == "testClient2"
+  copy:
+    src: "ifcfg-eth1.testClient2"
+    dest: /etc/sysconfig/network-scripts/ifcfg-eth1.101
+  notify: restart network
+
+- name: Копирование настроек vlan для testServer2
+  when: ansible_hostname == "testServer2"
+  copy:
+    src: "ifcfg-eth1.testServer2"
+    dest: /etc/sysconfig/network-scripts/ifcfg-eth1.101
+  notify: restart network
+
+#--------------------------------------------------- разное
+- name: Включение форвардинга пакетов
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+  when: inventory_hostname == "inetRouter" or
+        inventory_hostname == "centralRouter" or
+        inventory_hostname == "officeRouter"
+
+- name: Удаляем маршрут по умолчанию через вагрантовский интерфейс
+  when: inventory_hostname == "testClient1" or
+        inventory_hostname == "testClient2" or
+        inventory_hostname == "testServer1" or
+        inventory_hostname == "testServer2" or
+        inventory_hostname == "centralRouter" or
+        inventory_hostname == "officeRouter" 
+  command: /sbin/ip route del default via 10.0.2.2
+  ignore_errors: True
+
+
