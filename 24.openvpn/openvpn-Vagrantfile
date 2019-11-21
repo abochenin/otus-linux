@@ -1,0 +1,103 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+MACHINES = {
+  :server => {
+    :box_name => "centos/7",
+    :net => [
+               {ip: "192.168.10.10", netmask: "255.255.255.0", adapter: 2, virtualbox__intnet: "private-net"},
+            ]
+  },
+
+  :client => {
+    :box_name => "centos/7",
+    :net => [
+               {ip: "192.168.10.20", netmask: "255.255.255.0", adapter: 2, virtualbox__intnet: "private-net"},
+            ]
+  },
+}
+
+Vagrant.configure("2") do |config|
+  MACHINES.each do |boxname, boxconfig|
+    config.vm.define boxname do |box|
+        box.vm.box = boxconfig[:box_name]
+        box.vm.host_name = boxname.to_s
+
+        boxconfig[:net].each do |ipconf|
+          box.vm.network "private_network", ipconf
+        end
+
+        if boxconfig.key?(:public)
+          box.vm.network "public_network", boxconfig[:public]
+        end
+
+        box.vm.provider :virtualbox do |vb|
+          vb.customize ["modifyvm", :id, "--memory", "512"]
+        end
+
+        box.vm.provision "shell", inline: <<-SHELL
+          mkdir -p ~root/.ssh
+          cp ~vagrant/.ssh/auth* ~root/.ssh
+        SHELL
+
+        case boxname.to_s
+        when "server"
+#          box.vm.provision "ansible" do |ansible|
+#            ansible.playbook = "./provision/bond.yml"
+#          end
+          box.vm.provision "shell", run: "always", inline: <<-SHELL
+            yum install -y epel-release
+            yum install -y openvpn iperf3 mc easy-rsa
+            setenforce 0
+#            openvpn --genkey --secret /etc/openvpn/static.key
+            cd /etc/openvpn
+            /usr/share/easy-rsa/3/easyrsa init-pki
+            echo 'rasvpn' | /usr/share/easy-rsa/3/easyrsa build-ca nopass
+            echo 'rasvpn' | /usr/share/easy-rsa/3/easyrsa gen-req server nopass
+            echo 'yes' | /usr/share/easy-rsa/3/easyrsa sign-req server server
+            /usr/share/easy-rsa/3/easyrsa gen-dh
+            openvpn --genkey --secret ta.key
+            
+            echo 'client' | /usr/share/easy-rsa/3/easyrsa gen-req client nopass
+            echo 'yes' | /usr/share/easy-rsa/3/easyrsa sign-req client client
+            
+            cp /vagrant/openvpn-server.conf /etc/openvpn/server.conf
+            echo 'iroute 192.168.33.0 255.255.255.0' > /etc/openvpn/client/client
+            
+            systemctl start openvpn@server
+            systemctl enable openvpn@server
+            
+            mkdir /vagrant/pki
+            cp /etc/openvpn/pki/ca.crt /vagrant/pki/
+            cp /etc/openvpn/pki/issued/client.crt  /vagrant/pki/
+            cp /etc/openvpn/pki/private/client.key /vagrant/pki/
+            chmod 666 /vagrant/pki/*
+          SHELL
+
+        when "client"
+          box.vm.provision "shell", run: "always", inline: <<-SHELL
+            yum install -y epel-release
+            yum install -y openvpn mc
+            setenforce 0
+
+            cd /etc/openvpn
+            cp /vagrant/openvpn-client.conf ./client.conf
+            for a in ca.crt client.crt client.key; do cp /vagrant/pki/$a ./; chmod 600 ./$a; done
+            openvpn --config client.conf &
+            sleep 5
+            ping -c 4 10.10.10.1
+          SHELL
+
+        end
+
+    end
+  end
+#  config.vm.provision "ansible" do |ansible|
+#    ansible.verbose = "v"
+#    ansible.playbook = "provision/provision.yml"
+#  end
+end
+
+
