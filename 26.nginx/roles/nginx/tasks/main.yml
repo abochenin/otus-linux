@@ -1,0 +1,25 @@
+---
+# tasks file for nginx
+- name: Установка репо EPEL Repo
+  yum:
+    name: epel-release
+    state: present
+  tags:
+    - epel-package
+    - packages
+
+- name: Установка пакетов
+  yum:
+    name:
+      - mc
+      - nginx
+    state: present
+  notify:
+    - restart nginx
+
+- name: Копирование файла конфигурации nginx
+  copy:
+    src: "nginx.conf"
+    dest: "/etc/nginx/nginx.conf"
+  notify: restart nginx
+
