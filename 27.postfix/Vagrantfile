@@ -1,0 +1,76 @@
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+# -*- mode: ruby -*-
+# vim: set ft=ruby :
+
+MACHINES = {
+  :server => {
+    :box_name => "centos/7",
+    :net => [
+               {ip: "192.168.10.10", netmask: "255.255.255.0", adapter: 2, virtualbox__intnet: "private-net"},
+            ]
+  },
+
+}
+
+Vagrant.configure("2") do |config|
+  MACHINES.each do |boxname, boxconfig|
+    config.vm.define boxname do |box|
+        box.vm.box = boxconfig[:box_name]
+        box.vm.host_name = boxname.to_s
+
+        boxconfig[:net].each do |ipconf|
+          box.vm.network "private_network", ipconf
+        end
+
+        if boxconfig.key?(:public)
+          box.vm.network "public_network", boxconfig[:public]
+        end
+
+        box.vm.provider :virtualbox do |vb|
+          vb.customize ["modifyvm", :id, "--memory", "512"]
+        end
+
+        box.vm.provision "shell", inline: <<-SHELL
+          mkdir -p ~root/.ssh
+          cp ~vagrant/.ssh/auth* ~root/.ssh
+          sed -i '65s/PasswordAuthentication no/PasswordAuthentication yes/g' /etc/ssh/sshd_config
+          systemctl restart sshd
+        SHELL
+
+        case boxname.to_s
+        when "server"
+#          box.vm.provision "ansible" do |ansible|
+#            ansible.playbook = "./provision.yml"
+#          end
+
+          box.vm.provision "shell", run: "always", inline: <<-SHELL
+            yum install -y epel-release
+            yum install -y mc postfix dovecot
+            cd /etc/dovecot
+            tar xvf /varant/dovecot-conf.tar
+            cd /etc/postfix
+            tar xvf /vagrant/postfix-conf.tar
+            mkdir -p /var/spool/mail/example.com/info
+            mkdir -p /var/spool/mail/example.com/sales
+            chgrp -R vagrant /var/spool/mail/example.com
+            chmod -R 775 /var/spool/mail/example.com
+            echo "info@example.com:`yes password|doveadm pw -s PLAIN`:1000:1000::::" >/etc/dovecot/users
+            echo "sales@example.com:`yes password|doveadm pw -s SHA256`:1000:1000::::" >>/etc/dovecot/users
+            
+            systemctl restart postfix
+            systemctl restart dovecot
+#            setenforce 0
+          SHELL
+
+        end
+
+    end
+  end
+#  config.vm.provision "ansible" do |ansible|
+#    ansible.verbose = "v"
+#    ansible.playbook = "provision/provision.yml"
+#  end
+end
+
+
