@@ -1,0 +1,8 @@
+---
+- name: Установка и настройка 
+  strategy: free
+  hosts: all
+  become: true
+  roles:
+    - role: mysql
+

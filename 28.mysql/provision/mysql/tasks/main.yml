@@ -1,0 +1,104 @@
+---
+
+- name: Подключение репо EPEL Repo
+  yum:
+    name: epel-release
+    state: present
+
+- name: Установка пакетов
+  yum:
+    name:
+      - mc
+      - vim
+    state: present
+  tags:
+    - packages
+
+- name: Подключение репо PerconaServer
+  yum:
+    name: 
+      - https://www.percona.com/redir/downloads/percona-release/redhat/percona-release-1.0-13.noarch.rpm
+    state: present
+
+- name: Установка пакетов PerconaServer
+  yum:
+    name: 
+      - Percona-Server-server-57
+      - MySQL-python
+    state: present
+  notify: restart mysql
+
+- name: Копируем конфиги /etc/my.cnf.d/
+  copy: 
+    src: conf.d/
+    dest: /etc/my.cnf.d/
+  notify: restart mysql
+
+- name: Копируем отличающиеся конфиги для slave, 01-base.cnf, 05-binlog.cnf
+  when: inventory_hostname == "slave"
+  copy: 
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: "slave-01-base.cnf", dest: "/etc/my.cnf.d/01-base.cnf" }
+    - { src: "slave-05-binlog.cnf", dest: "/etc/my.cnf.d/05-binlog.cnf" }
+  notify: restart mysql
+
+- name: Рестарт mysql для генерации первоначального пароля
+  meta: flush_handlers
+
+- name: Получение пароля из лога, сохранение в переменной
+  shell: cat /var/log/mysqld.log | grep 'password is generated for root@localhost' | awk '{print $11}' | tail -1
+  register: mysql_temp_password
+
+- name: меняем пароль mysql_admin
+  shell:
+    mysql --connect-expired-password -uroot -p'{{ mysql_temp_password.stdout }}' -e 'ALTER USER USER() IDENTIFIED BY "{{ mysql_root_password }}"'
+  ignore_errors: yes
+
+#- name: Set root user password
+#  mysql_user: 
+#    name: "root"
+#    host: "localhost"
+#    password: "{{ mysql_root_password }}"
+#    check_implicit_admin: yes
+#    login_user: root
+#    login_password: "{{ mysql_temp_password }}"
+#    state: present
+#  ignore_errors: yes
+
+- name: Создадим на master тестовую базу bet 
+  when: inventory_hostname == "master"
+  mysql_db:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    name: bet
+    state: present
+
+- name: и загрузим в нее дамп
+  when: inventory_hostname == "master"
+  mysql_db:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    name: bet
+    state: import
+    target: /vagrant/provision/mysql/files/bet.dmp
+
+- name: Создадим пользователя для репликации и даем ему права на эту самую репликацию
+  when: inventory_hostname == "master"
+  mysql_user:
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    name: "repl"
+    password: "{{ mysql_repl_password }}"
+    host: '%'
+    priv: '*.*:ALL'
+    state: present
+
+- name: Ну и собственно подключаем и запускаем слейв
+  when: inventory_hostname == "slave"
+  shell: |
+    mysql -uroot -p'{{ mysql_root_password }}' -e 'CHANGE MASTER TO MASTER_HOST="192.168.11.150",\
+      MASTER_USER="repl", MASTER_PASSWORD="{{ mysql_repl_password }}", MASTER_AUTO_POSITION=1;'
+    mysql -uroot -p'{{ mysql_root_password }}' -e 'START SLAVE;'
+
