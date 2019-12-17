@@ -1,0 +1,7 @@
+---
+# handlers file for provision/roles/postgres11-master
+- name: restart postgresql
+  systemd:
+    name: postgresql-11.service
+    state: restarted
+

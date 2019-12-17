@@ -1,0 +1,37 @@
+---
+- name: подключение epel repo
+  yum:
+    name: epel-release
+    state: present
+
+
+# https://dl.2ndquadrant.com/default/release/get/11/rpm
+- name: копирование /tmp/barman-repo.sh
+  copy:
+    src: barman-repo.sh
+    dest: /tmp/barman-repo.sh
+    mode: 0550
+
+- name: подключение barman repo (barman-repo.sh)
+  shell: /tmp/barman-repo.sh
+  args:
+    creates: /etc/yum.repos.d/2ndquadrant-dl-default-release-pg11.repo
+
+
+- name: установка прокси-сервера для 2ndquadrant (проблема с недоступностью этого сайта с многих площадок)
+  lineinfile:
+    path: /etc/yum.repos.d/2ndquadrant-dl-default-release-pg11.repo
+    insertafter: '\[2ndquadrant-dl-default-release-pg11\]'
+#    line: 'proxy=http://136.243.47.220:3128' # случайно взятый прокси (например, Германия) https://hidemy.name/ru/proxy-list/?country=DE&type=h#list
+    line: 'proxy=http://136.243.47.220:3128'
+#    line: 'proxy=http://88.198.24.108:3128'
+#    line: 'proxy=http://89.36.219.208:3128'
+    state: present
+
+- name: установка пакетов barman
+  yum:
+    name: 
+      - barman
+      - barman-cli
+    state: present
+

@@ -1,0 +1,9 @@
+---
+# vars file for provision/roles/postgres11-master
+barman_username: 'barman'
+barman_password: 'barman_pass'
+barman_streaming_username: 'barman_streaming_user'
+barman_streaming_password: 'barman_streaming_pass'
+streaming_username: 'streaming_user'
+streaming_password: 'streaming_pass'
+

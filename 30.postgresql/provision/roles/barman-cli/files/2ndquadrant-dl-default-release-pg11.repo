@@ -1,0 +1,22 @@
+[2ndquadrant-dl-default-release-pg11]
+name=2ndQuadrant packages (PG11) for $releasever - $basearch
+baseurl=https://dl.2ndquadrant.com/default/release/rpm/packages/centos/$releasever/$basearch/11/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-2NDQ-DL-DEFAULT
+
+
+[2ndquadrant-dl-default-release-pg11-debug]
+name=2ndQuadrant packages (PG11) for $releasever - $basearch - Debug
+baseurl=https://dl.2ndquadrant.com/default/release/rpm/dbg_packages/centos/$releasever/$basearch/11/
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-2NDQ-DL-DEFAULT
+
+
+[2ndquadrant-dl-default-release-pg11-source]
+name=2ndQuadrant packages (PG11) for $releasever - $basearch - Source
+baseurl=https://dl.2ndquadrant.com/default/release/rpm/src_packages/centos/$releasever/$basearch/11/
+enabled=0
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-2NDQ-DL-DEFAULT

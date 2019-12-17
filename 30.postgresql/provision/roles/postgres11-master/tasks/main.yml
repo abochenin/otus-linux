@@ -1,0 +1,59 @@
+---
+- name: подключение postgresql repo
+  yum:
+    name: https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+    state: present
+
+- name: установка пакетов postgresql server
+  yum:
+    name: postgresql11-server
+    state: present
+
+- name: init db
+  shell: /usr/pgsql-11/bin/postgresql-11-setup initdb
+  args:
+    creates: /var/lib/pgsql/11/data/postgresql.conf
+
+- name: создание каталога ssh для организации бакапов barman
+  file:
+    path: "/var/lib/pgsql/.ssh"
+    state: directory
+    owner: postgres
+    group: postgres
+
+- name: копирование ключей ssh
+  copy: src=files/ssh/{{ item }} dest=/var/lib/pgsql/.ssh/ mode=0600 owner=postgres group=postgres
+  with_items:
+    - id_rsa
+    - id_rsa.pub
+    - config
+
+- name: копирование конфигурации postgresql /var/lib/pgsql/11/data/*
+  template:
+    src: '{{ item }}'
+    dest: /var/lib/pgsql/11/data
+    mode: 0600
+    owner: postgres
+    group: postgres
+  with_fileglob: files/*
+  notify: restart postgresql
+
+- name: рестарт сервисов (при необходимости)
+  meta: flush_handlers
+
+- name: создание слота репликации
+  become_user: postgres
+  shell: psql postgres -c "SELECT pg_create_physical_replication_slot('pg_slot_1')"
+
+- name: создание пользователя БД {{ streaming_username }}
+  become_user: postgres
+  shell: psql postgres -c "CREATE USER {{ streaming_username }} WITH REPLICATION PASSWORD '{{ streaming_password }}'"
+
+- name: создание пользователя БД {{ barman_username }}
+  become_user: postgres
+  shell: psql postgres -c "CREATE USER {{ barman_username }} WITH SUPERUSER PASSWORD '{{ barman_password }}'"
+
+- name: создание пользователя БД {{ barman_streaming_username }}
+  become_user: postgres
+  shell: psql postgres -c "CREATE USER {{ barman_streaming_username }} WITH REPLICATION PASSWORD '{{ barman_streaming_password }}'"
+

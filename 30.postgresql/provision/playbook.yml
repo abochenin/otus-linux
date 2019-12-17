@@ -1,0 +1,21 @@
+- name: установка postgers-master
+  hosts: master
+  become: True
+  roles:
+    - barman-cli
+    - postgres11-master
+
+- name: установка postgres-slave
+  hosts: slave
+  become: True
+  roles:
+    - postgres11-slave
+
+- name: установка barman
+  hosts: backup
+  become: True
+  roles:
+    - postgres11-client
+    - barman-cli
+    - barman-config
+

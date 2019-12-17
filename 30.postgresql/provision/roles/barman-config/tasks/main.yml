@@ -1,0 +1,40 @@
+---
+- name: проверка, установлен ли пакет barman
+  yum:
+    name: barman
+    state: present
+
+- name: копирование файла настроек/паролей barman
+  copy:
+    src: pgpass
+    dest: /var/lib/barman/.pgpass
+    mode: 0600
+    owner: barman
+    group: barman
+
+- name: Копируем конфиги
+#  when: inventory_hostname == "slave"
+  copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - { src: "barman.conf", dest: "/etc/barman.conf" }
+    - { src: "master.conf", dest: "/etc/barman.d/master.conf" }
+
+- name: создание каталога /var/lib/barman/.ssh
+  file:
+    path: "/var/lib/barman/.ssh"
+    state: directory
+    owner: barman
+    group: barman
+
+- name: копирование ключей ssh
+  copy: src=files/ssh/{{ item }} dest=/var/lib/barman/.ssh/ mode=0600 owner=barman group=barman
+  with_items:
+    - id_rsa
+    - id_rsa.pub
+    - authorized_keys
+
+- name: создание слота репликации
+  shell: barman receive-wal --create-slot master
+
