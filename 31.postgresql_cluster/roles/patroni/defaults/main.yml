@@ -1,0 +1,18 @@
+---
+# defaults file for roles/patroni
+patroni_scope_name: otus
+
+apt_packages:
+  - gcc 
+  - python-dev 
+  - postgresql-server-dev-all
+  - python-pip
+  - python-apt
+
+pip_packages:
+  - python-etcd
+  - python-consul
+  - psycopg2
+  - psycopg2-binary
+  - setuptools
+

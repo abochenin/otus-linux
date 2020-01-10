@@ -1,0 +1,22 @@
+---
+- name: Patroni | common | Install required packages
+  yum:
+    name:
+      - wget
+      - zip
+      - unzip
+      - git
+      - telnet
+      - psmisc
+    state: present
+
+- name: Patroni | common | Turn off SELinux
+  selinux:
+    state: disabled
+
+- name: Patroni | common | Turn off Firewalld
+  systemd:
+    name: firewalld
+    state: stopped
+    enabled: False
+

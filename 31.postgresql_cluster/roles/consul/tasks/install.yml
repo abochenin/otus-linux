@@ -1,0 +1,35 @@
+---
+- name: Consul | Download Consul archive
+  get_url:
+    url: https://releases.hashicorp.com/consul/1.5.3/consul_1.5.3_linux_amd64.zip
+    dest: /tmp/consul.zip
+
+- name: Consul | Unarchive Consul
+  unarchive:
+    src: /tmp/consul.zip
+    dest: /usr/sbin/
+    remote_src: True
+
+- name: Consul | Remove temporary file
+  file:
+    path: /tmp/consul.zip
+    state: absent
+
+- name: Consul | Create consul user
+  user:
+    name: consul
+    shell: /bin/false
+    home: /etc/consul.d
+
+- name: Consul | Prepare consul directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: consul
+    group: consul
+  with_items:
+      - /etc/consul.d
+      - /opt/consul
+  tags:
+    - dirs
+

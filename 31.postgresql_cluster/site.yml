@@ -1,0 +1,18 @@
+---
+- name: Consul install and configure role
+  hosts: dcs
+  gather_facts: True
+  become_user: root
+  become: True
+
+  roles:
+    - consul
+
+- name: Patroni install and configure role
+  hosts: db
+  gather_facts: True
+  become_user: root
+  become: True
+
+  roles:
+    - patroni

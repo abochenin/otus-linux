@@ -1,0 +1,75 @@
+scope: {{ patroni_scope_name }}
+name: {{ ansible_hostname }}
+
+restapi:
+  listen: {{ ansible_enp0s8.ipv4.address }}:8008
+  connect_address: {{ ansible_enp0s8.ipv4.address }}:8008
+
+consul:
+  host: 192.168.11.100:8500
+
+bootstrap:
+  dcs:
+    ttl: 30
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    postgresql:
+      use_pg_rewind: true
+      parameters:
+        archive_mode: "on"
+        archive_command: 'pg_probackup-11 archive-push -B /var/backup --instance dbdc2 --wal-file-path=%p --wal-file-name=%f --remote-host=10.23.2.163 && pg_probackup-11 archive-push -B /var/backup --instance dbdc2 --wal-file-path=%p --wal-file-name=%f --remote-host=10.23.1.185'
+        max_parallel_workers: 8
+        min_wal_size: 1GB
+        max_wal_size: 2GB
+        max_connections: 100
+        max_wal_senders: 5
+        
+  initdb:
+  - encoding: UTF8
+  - data-checksums
+
+postgresql:
+  listen: {{ ansible_enp0s8.ipv4.address }}:5432
+  bin_dir: /usr/lib/postgresql/11/bin
+  connect_address: {{ ansible_enp0s8.ipv4.address }}:5432
+  data_dir: /var/data/base
+  pgpass: /tmp/.pgpass
+  authentication:
+    replication:
+      username: replicator
+      password: 'gfhjkm'
+    superuser:
+      username: postgres
+      password: 'gfhjkm'
+  parameters:
+    unix_socket_directories: '.'
+    log_checkpoints: 'on'
+    log_duration: 'on'
+    log_hostname: 'off'
+    log_line_prefix: '[postgres] %m %h %s %u %d %x %e: '
+    log_lock_waits: 'off'
+    log_statement: 'ddl'
+    log_temp_files: '0'
+    log_timezone: 'UTC'
+    log_parser_stats: 'off'
+    log_planner_stats: 'off'
+    log_executor_stats: 'off'
+    log_statement_stats: 'off'
+
+  pg_hba:
+  - host replication replicator 127.0.0.1/32 md5
+  - host replication replicator 192.168.11.120/0 md5
+  - host replication replicator 192.168.11.121/0 md5
+  - host all all 0.0.0.0/0 md5
+
+log:
+  level: INFO
+  format: '[patroni] %(asctime)s %(levelname)s: %(message)s '
+watchdog:
+  mode: off
+tags:
+  nofailover: false
+  noloadbalance: false
+  clonefrom: false
+  nosync: false

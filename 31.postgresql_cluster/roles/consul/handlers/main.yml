@@ -1,0 +1,7 @@
+---
+# handlers file for roles/consul
+- name: start consul
+  systemd:
+    name: consul
+    enabled: true
+    state: started

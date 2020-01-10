@@ -1,0 +1,16 @@
+---
+# Prepare host
+- name: Consul | Install required packages
+  apt:
+    name: zip
+    state: present
+    update_cache: True
+
+# Install consul
+- include: install.yml
+  tags:
+    - install
+
+- include: configure.yml
+  tags:
+    - config

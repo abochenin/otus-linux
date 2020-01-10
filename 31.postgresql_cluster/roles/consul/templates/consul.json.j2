@@ -1,0 +1,19 @@
+{
+  "datacenter": "patroni",
+  "node_name": "consul",
+  "addresses" : {
+    "http": "192.168.11.100"
+  },
+  "bind_addr": "192.168.11.100",
+  "node_name": "192.168.11.100",
+  "rejoin_after_leave": true,
+  "domain": "consul",
+  "retry_join": [ "192.168.11.100"],
+  "bootstrap_expect": 1,
+  "server": true,
+  "verify_incoming": false,
+  "verify_outgoing": false,
+  "data_dir": "/opt/consul",
+  "disable_remote_exec": false,
+  "ui": true
+}
