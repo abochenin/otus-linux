@@ -1,0 +1,21 @@
+---
+# tasks file for tomcat
+
+- name: Установка пакетов tomcat
+  yum: 
+    name: tomcat
+    state: present
+
+- name: Копирование приложения /usr/share/tomcat/webapps/sample.war
+  copy:
+    src: sample.war
+    dest: /usr/share/tomcat/webapps/
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Запуск службы tomcat
+  systemd:
+    name: tomcat
+    state: started
+    enabled: yes

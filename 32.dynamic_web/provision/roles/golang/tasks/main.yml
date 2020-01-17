@@ -1,0 +1,36 @@
+---
+# tasks file for go
+
+- name: Установка пакетов Golang
+  yum:
+    name: golang
+    state: present
+
+- name: Создание каталога /opt/go
+  file: path=/opt/golang state=directory mode=0755
+
+- name: Копирование /opt/golang/main.go
+  copy: src=main.go dest=/opt/golang/ owner=root group=root mode=0644
+
+- name: Сборка main.go
+  command: go build -o /opt/golang/main /opt/golang/main.go
+  args:
+    creates: /opt/golang/main
+
+- name: Копирование /etc/systemd/system/golang.service
+  copy:
+    src: golang.service
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Перечитать конфигурацию systemd
+  systemd:
+    daemon-reload: yes
+
+- name: И запустить службу golang
+  systemd:
+    name: golang
+    state: started
+    enabled: yes

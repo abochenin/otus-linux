@@ -1,0 +1,25 @@
+---
+
+- name: Установка nginx
+  hosts: all
+  become: yes
+  roles:
+    - nginx
+
+- name: Запуск роли Tomcat
+  hosts: all
+  become: yes
+  roles:
+    - tomcat
+
+- name: Запуск роли Golang
+  hosts: all
+  become: yes
+  roles:
+    - golang
+
+- name: Запуск роли Ruby
+  hosts: all
+  become: yes
+  roles:
+    - ruby

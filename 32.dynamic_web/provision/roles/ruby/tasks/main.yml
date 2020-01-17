@@ -1,0 +1,39 @@
+---
+# tasks file for ruby
+
+- name: Установка пакетов uwsgi
+  yum:
+    name:
+      - uwsgi
+      - uwsgi-plugin-rack
+      - rubygem-sinatra
+    state: present
+
+- name: Создание каталога /opt/ruby
+  file: path=/opt/ruby state=directory mode=0755
+
+- name: Копирование /opt/rubi/config.ru
+  copy:
+    src: config.ru
+    dest: /opt/ruby/
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Копирование /etc/uwsgi.d/rubytest.ini
+  copy:
+    src: rubytest.ini
+    dest: /etc/uwsgi.d/
+    owner: uwsgi
+    group: uwsgi
+    mode: 0644
+
+- name: Создание каталога /run/uwsgi
+  file: path=/run/uwsgi state=directory owner=uwsgi group=uwsgi mode=0755
+
+- name: Запуск службы uwsgi
+  systemd:
+    name: uwsgi
+    state: started
+    enabled: yes
+

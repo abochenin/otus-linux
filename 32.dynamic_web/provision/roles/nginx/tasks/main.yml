@@ -1,0 +1,30 @@
+---
+# tasks file for nginx
+
+- name: Подключение EPEL Repo
+  yum:
+    name: epel-release
+    state: present
+
+- name: Отключение SELinux
+  selinux:
+    state: disabled
+
+- name: Установка пакетов Nginx
+  yum:
+    name: nginx
+    state: present
+
+- name: Коипирование /etc/nginx/nginx.conf
+  copy:
+    src: nginx.conf
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Запуск сервиса nginx
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes

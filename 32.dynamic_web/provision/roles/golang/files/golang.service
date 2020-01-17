@@ -1,0 +1,11 @@
+[Unit]
+Description=Golang service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=5s
+ExecStart=/opt/golang/main
+
+[Install]
+WantedBy=multi-user.target
