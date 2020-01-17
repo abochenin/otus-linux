@@ -9,9 +9,6 @@ nginx + java (tomcat/jetty/netty) + go + ruby
 - на хостовой системе через конфиги в /etc
 - деплой через docker-compose
 
-## Описание
-Создано на основе материалов курса из  https://gitlab.com/otus_linux/patroni/
-
 ## Развертываем инфраструктуру
 
 ```bash
