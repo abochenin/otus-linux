@@ -2,16 +2,20 @@
 
 Построение отказоустойчивого веб. Проект состоит из нескольких виртуальных машин, в соответствии с ролями.
 - Кластер GALERA mariadb для предоставления приложениям доступа к БД.
-db1
-db2
-db3
+-- db1
+-- db2
+-- db3
 
 - Фронтенды nginx, объединенные через keepalive с настроенным общим адресом 192.168.34.100
-fe1
-fe2
+-- fe1
+-- fe2
 
 - Сервер для хранения резервных копий, и логов rsyslog со всех вышеперечисленных машин
-backup
+-- backup
+
+### Схема
+
+![project](https://github.com/abochenin/otus-linux/blob/master/34.project/images/project.png)
 
 ### Запуск стенда
 
@@ -55,9 +59,6 @@ Playbook run took 0 days, 0 hours, 25 minutes, 30 seconds
 ```
 
 
-### Схема
-
-![project](https://github.com/abochenin/otus-linux/blob/master/34.project/images/project.png)
 
 ## База данных
 
