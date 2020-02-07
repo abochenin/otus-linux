@@ -1,0 +1,57 @@
+---
+- name: Install the remi php repo
+  yum:
+    name: http://rpms.remirepo.net/enterprise/remi-release-7.rpm
+    state: present
+
+- name: Enable 7.2 repo
+  yum_repository:
+    name: remi-php72
+    description: Remi PHP 7.2 RPM repository for Enterprise Linux 7 - $basearch
+    file: remi-php72
+    mirrorlist: http://cdn.remirepo.net/enterprise/7/php72/mirror
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+
+- name: Install PHP Packages
+  yum: 
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - php
+    - php-gd
+    - php-fpm
+    - php-mysql
+    - php-pear
+    - php-xml
+    - php-common
+
+- name: Update php.ini php-configuration file - /etc/php.ini
+  template:
+    src: php.ini.j2
+    dest: /etc/php.ini
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart php-fpm
+
+- name: Update www.conf php-configuration file - /etc/php-fpm.d/www.conf
+  template:
+    src: php-fpm.d/www.conf.j2
+    dest: /etc/php-fpm.d/www.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart php-fpm
+
+- name: enable php-fpm
+  systemd:
+    name: php-fpm
+    enabled: yes
+
+- name: start php-fpm
+  systemd:
+    name: php-fpm
+    state: started
+

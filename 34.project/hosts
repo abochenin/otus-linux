@@ -1,0 +1,18 @@
+[backup]
+backup ansible_host=192.168.34.102 ansible_user='vagrant' ansible_port=22 ansible_private_key_file=.vagrant/machines/backup/virtualbox/private_key
+
+[fe]
+fe1 ansible_host=192.168.34.103 ansible_user='vagrant' ansible_port=22 ansible_private_key_file=.vagrant/machines/fe1/virtualbox/private_key
+fe2 ansible_host=192.168.34.104 ansible_user='vagrant' ansible_port=22 ansible_private_key_file=.vagrant/machines/fe2/virtualbox/private_key
+
+[db-master]
+db1 ansible_host=192.168.34.105 ansible_user='vagrant' ansible_port=22 ansible_private_key_file=.vagrant/machines/db1/virtualbox/private_key
+
+[db-slaves]
+db2 ansible_host=192.168.34.106 ansible_user='vagrant' ansible_port=22 ansible_private_key_file=.vagrant/machines/db2/virtualbox/private_key
+db3 ansible_host=192.168.34.107 ansible_user='vagrant' ansible_port=22 ansible_private_key_file=.vagrant/machines/db3/virtualbox/private_key
+
+[gluster]
+db1
+db2
+db3

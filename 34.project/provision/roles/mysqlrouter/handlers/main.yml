@@ -1,0 +1,6 @@
+---
+# handlers file for mysqlrouter
+- name: restart mysqlrouter
+  systemd:
+    name: mysqlrouter
+    state: restarted

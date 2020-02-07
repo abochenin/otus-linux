@@ -1,0 +1,26 @@
+---
+- name: Create /var/log/remote
+  file:
+    path: /var/log/remote
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+  notify: restart rsyslog
+
+- name: Update /etc/rsyslog.conf
+  template:
+    src: etc/rsyslog.conf.j2
+    dest: /etc/rsyslog.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart rsyslog
+
+- name: Open firewalld syslog
+  firewalld:
+    service: syslog
+    zone: public
+    permanent: yes
+    state: enabled
+  notify: restart firewalld

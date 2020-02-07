@@ -1,0 +1,42 @@
+---
+- name: Install epel
+  yum:
+    name: epel-release
+    state: present
+
+- name: Install Common Packets
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - mc
+    - mailx
+    - telnet
+    - ntp
+    - firewalld
+
+- name: Start the NTP service
+  service:
+    name: ntpd 
+    state: started
+    enabled: true
+
+- name: Start the firewalld service
+  service:
+    name: firewalld
+    state: started
+    enabled: true
+
+- name: Disable SELinux
+  selinux:
+    state: disabled
+
+- name: Update /etc/hosts
+  template:
+    src: hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
+
+

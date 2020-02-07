@@ -1,0 +1,92 @@
+---
+- name: Check if EPEL repo is already configured.
+  stat:
+    path: "{{ epel_repofile_path }}"
+  register: epel_repofile_result
+
+- name: Install EPEL repo.
+  yum:
+    name: "{{ epel_repo_url }}"
+    state: present
+  register: result
+  until: result is succeeded
+  retries: 5
+  delay: 10
+  when: not epel_repofile_result.stat.exists
+
+- name: Import EPEL GPG key.
+  rpm_key:
+    key: "{{ epel_repo_gpg_key_url }}"
+    state: present
+  when: not epel_repofile_result.stat.exists
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Ensure dependencies are installed.
+  yum:
+    name: "centos-release-gluster7"
+    state: present
+
+- name: Ensure Gluster packages are installed.
+  yum:
+    name:
+      - glusterfs-server
+      - glusterfs-client
+    state: present
+
+
+- name: Ensure GlusterFS is started and enabled at boot.
+  service: "name=glusterd state=started enabled=yes"
+
+- name: set up firewall.
+  firewalld:
+    service: glusterfs
+    permanent: true
+    state: enabled
+
+- name: Create a new primary partition
+  parted:
+    device: /dev/sdb
+    number: 1
+    state: present
+
+- name: Create a ext2 filesystem on /dev/sdb1
+  filesystem:
+    fstype: ext3
+    dev: /dev/sdb1
+
+- name: Mount up /dev/sdb1 to /srv/gluster/brick
+  mount:
+    path: /srv/gluster/brick
+    src: /dev/sdb1
+    fstype: ext3
+    state: present
+
+- name: Ensure Gluster brick and mount directories exist.
+  file: "path={{ item }} state=directory mode=0775"
+  with_items:
+    - "{{ gluster_brick_dir }}"
+    - "{{ gluster_mount_dir }}"
+
+- name: Create a trusted storage pool
+  when: inventory_hostname == "db3"
+  gluster_peer:
+    state: present
+    nodes:
+      - db1
+      - db2
+#    force: yes
+
+- name: Configure Gluster volume.
+  when: inventory_hostname == "db3"
+  gluster_volume:
+    state: present
+    name: "{{ gluster_brick_name }}"
+    brick: "{{ gluster_brick_dir }}"
+    options:
+      { network.ping-timeout: "5"
+      }
+    disperses: 3
+    cluster: "{{ groups.gluster | join(',') }}"
+    host: "{{ inventory_hostname }}"
+    force: yes
+

@@ -1,0 +1,44 @@
+---
+- name: setup backup
+  hosts: backup
+  become: True
+  roles:
+    - roles/common
+    - roles/backup
+    - roles/log-server
+
+- name: setup db-master
+  hosts: db-master
+  become: true
+  roles:
+    - roles/common
+    - roles/galera
+    - roles/glusterfs-server
+    - roles/backup
+    - roles/log-client
+
+- name: setup db
+  hosts: db-slaves
+  become: true
+  roles:
+    - roles/common
+    - roles/galera
+    - roles/glusterfs-server
+    - roles/backup
+    - roles/log-client
+
+- name: setup fe
+  hosts: fe
+  become: true
+  roles:
+    - roles/common
+    - roles/glusterfs-client
+    - roles/nginx
+    - roles/php
+    - roles/mysqlrouter
+    - roles/wordpress
+    - roles/keepalived
+    - roles/backup
+    - roles/mariadb-client
+    - roles/log-client
+

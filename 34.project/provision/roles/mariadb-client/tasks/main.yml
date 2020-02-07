@@ -1,0 +1,19 @@
+---
+- name: Enable MariaDB repo
+  copy:
+    src: mariadb.repo
+    dest: /etc/yum.repos.d/mariadb.repo
+
+- name: Install mariadb
+  yum:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+    - MariaDB-client
+
+
+
+
+

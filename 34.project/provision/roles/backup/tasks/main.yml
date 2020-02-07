@@ -1,0 +1,76 @@
+---
+- name: Create backup user
+  user: 
+    name: backup
+# mkpasswd --method=sha-512, input P@ssw0rd
+    password: '$6$wSX97bXNS3Vk45bs$U4ba4Q9WuUMHb/9Rr2viKBTJQKkNEg8NnQbL6T./kQEe6AXGvcKyvmG7D4U7R1G1YfdgxOm95e027odpMzTv80'
+    state: present
+    shell: /bin/bash
+
+- name: Create .ssh for backup
+  file:
+    path: /home/backup/.ssh
+    state: directory
+    owner: backup
+    group: backup
+    mode: 0700
+
+- name: Create .ssh for root
+  file:
+    path: /root/.ssh
+    state: directory
+    owner: root
+    group: root
+    mode: 0700
+
+- name: Placing id_rsa
+  copy:
+    src: id_rsa
+    dest: /root/.ssh/id_rsa
+    owner: root
+    group: root
+    mode: 0600
+  when: ansible_hostname == "backup"
+
+- name: Changing authorized_keys
+  authorized_key:
+    user: backup
+    state: present
+    key: "{{ lookup('file', 'roles/backup/files/id_rsa.pub') }}"
+
+- name: Creating cron task for backing up wordpress home
+  cron:
+    name: wordpress-home
+    minute: '*/20'
+    user: root
+    job: '/bin/tar zcvf /home/backup/wordpress-fe1.tar.gz /var/www/html/wordpress/'
+    cron_file: wordpress-cron
+  when: ansible_hostname == "fe1"
+
+- name: Creating cron task for SQLBackup wordpress DB
+  cron:
+    name: wordpress-db
+    minute: '*/20'
+    user: root
+    job: '/bin/mysqldump --single-transaction --set-gtid-purged=OFF wordpress > /home/backup/wordpress-db.sql'
+    cron_file: wordpress-cron
+  when: ansible_hostname == "db1"
+
+- name: Creating cron task for SCP backup wordpress DB
+  cron:
+    name: backup-wp-db
+    minute: '*/20'
+    user: root
+    job: '/bin/scp backup@db1:wordpress-db.sql /home/backup/'
+    cron_file: wordpress-cron
+  when: ansible_hostname == "backup"
+
+- name: Creating cron tab for backup WP www
+  cron:
+    name: backup-wp-dir
+    minute: '*/20'
+    user: root
+    job: '/bin/scp backup@fe1:wp.tar.gz /home/backup/'
+    cron_file: wordpress-cron
+  when: ansible_hostname == "backup"
+

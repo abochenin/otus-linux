@@ -1,0 +1,20 @@
+---
+- name: Update /etc/rsyslog.conf
+  template:
+    src: etc/rsyslog.conf.j2
+    dest: /etc/rsyslog.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart rsyslog
+
+- name: Update /etc/rsyslog.d/mysqld.conf
+  template:
+    src: etc/rsyslog.d/mysqld.conf.j2
+    dest: /etc/rsyslog.d/mysqld.conf
+    owner: root
+    group: root
+    mode: 0644
+  when: ansible_hostname is search ("db")
+  notify: restart rsyslog
+

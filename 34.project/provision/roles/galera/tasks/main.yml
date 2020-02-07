@@ -1,0 +1,105 @@
+---
+- name: Enable MariaDB repo
+  copy:
+    src: mariadb.repo
+    dest: /etc/yum.repos.d/mariadb.repo
+
+- name: Install mariadb, galera
+  yum:
+    name: "{{ packages }}"
+    state: present
+    update_cache: yes
+  vars:
+    packages:
+    - MariaDB-server
+    - MariaDB-client
+    - rsync
+    - galera
+
+
+- name: Open firewalld 3306
+  firewalld:
+    service: mysql
+    zone: public
+    permanent: yes
+    state: enabled
+  notify: restart firewalld
+
+- name: Open firewalld ports for MariaDB, portmapper, GlusterFS
+  firewalld:
+    port: "{{ item.port }}"
+    zone: public
+    permanent: yes
+    state: enabled
+  with_items:
+    - { port: "4567/tcp" }
+    - { port: "4567/udp" }
+    - { port: "4568/tcp" }
+    - { port: "4444/tcp" }
+    - { port: "24007/tcp" }
+    - { port: "111/tcp" }
+    - { port: "111/udp" }
+    - { port: "49152/tcp" }
+    - { port: "49153/tcp" }
+  notify: restart firewalld
+
+- meta: flush_handlers
+
+- name: Start mariadb
+  systemd:
+    name: mariadb
+    state: started
+
+- name: Change MariaDB root password
+  command: "{{ item }}" 
+  with_items:
+    - "mysql -u root -e 'set password = password(\"P@ssw0rd\");'"
+
+- name: Stop mariadb.service
+  systemd:
+    name: mariadb
+    state: stopped
+
+
+- name: Copy /etc/my.cnf.d/galera.cnf
+  when: inventory_hostname == "db1"
+  copy: src=galera-db1.cnf  dest=/etc/my.cnf.d/galera.cnf owner=root group=root mode=0644
+
+- name: Copy /etc/my.cnf.d/galera.cnf
+  when: inventory_hostname == "db2"
+  copy: src=galera-db2.cnf  dest=/etc/my.cnf.d/galera.cnf owner=root group=root mode=0644
+
+- name: Copy /etc/my.cnf.d/galera.cnf
+  when: inventory_hostname == "db3"
+  copy: src=galera-db3.cnf  dest=/etc/my.cnf.d/galera.cnf owner=root group=root mode=0644
+
+
+- name: Start galera cluster on db1
+  when: inventory_hostname == "db1"
+  command: "galera_new_cluster" 
+
+- name: Start mariadb
+  when: inventory_hostname == "db2" or inventory_hostname == "db3"
+  systemd:
+    name: mariadb
+    state: started
+    enabled: yes
+#  ignore_errors: yes
+
+- name: Enable mariadb service
+  systemd:
+    name: mariadb
+    enabled: yes
+
+- name: Create Wordpress DB, users, grants
+  when: inventory_hostname == "db1"
+  command: "{{ item }}"
+  with_items:
+    - "mysql -uroot -e 'CREATE DATABASE wordpress CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'"
+    - "mysql -uroot -e 'CREATE USER wordpress@192.168.34.100 IDENTIFIED BY \"Passw0rd\"; GRANT ALL on wordpress.* to wordpress@192.168.34.100;'"
+    - "mysql -uroot -e 'CREATE USER wordpress@192.168.34.103 IDENTIFIED BY \"Passw0rd\"; GRANT ALL on wordpress.* to wordpress@192.168.34.103;'"
+    - "mysql -uroot -e 'CREATE USER wordpress@192.168.34.104 IDENTIFIED BY \"Passw0rd\"; GRANT ALL on wordpress.* to wordpress@192.168.34.104;'"
+    - "mysql -uroot -e 'CREATE USER wordpress@fe1 IDENTIFIED BY \"Passw0rd\"; GRANT ALL on wordpress.* to wordpress@fe1;'"
+    - "mysql -uroot -e 'CREATE USER wordpress@fe2 IDENTIFIED BY \"Passw0rd\"; GRANT ALL on wordpress.* to wordpress@fe2;'"
+    - "mysql -uroot -e 'FLUSH PRIVILEGES;'"
+  tags: qwe

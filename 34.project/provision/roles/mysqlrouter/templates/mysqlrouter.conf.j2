@@ -1,0 +1,21 @@
+[DEFAULT]
+logging_folder = /var/log/mysqlrouter
+runtime_folder = /var/run/mysqlrouter
+config_folder = /etc/mysqlrouter
+
+[logger]
+level = INFO
+
+[keepalive]
+interval = 60
+
+[routing]
+bind_address = 127.0.0.1
+bind_port = 3306
+client_connect_timeout = 2
+connect_timeout = 2
+destinations = db1,db2,db3
+max_connect_errors = 2
+max_connections = 500
+routing_strategy = round-robin
+read_timeout = 2

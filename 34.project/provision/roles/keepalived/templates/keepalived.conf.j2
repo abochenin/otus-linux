@@ -1,0 +1,35 @@
+ ! Configuration File for keepalived
+
+global_defs {
+    enable_script_security  # Keepalived yells about scripts?!
+    script_user root root  # Keepalived yells anyway?! RHBZ#1477563
+}
+
+vrrp_script chk_service {
+    script '/bin/killall  -0 nginx'
+    interval 2
+!    weight 2
+}
+
+vrrp_instance VI_1 {
+    interface eth1
+    state {{ keepalived_role }}
+
+    virtual_router_id 34
+    {% if keepalived_role.lower() == "master" %}
+    priority 255
+    {% else %}
+    priority 100
+    {% endif %}   
+
+!    advert_int 1
+    virtual_ipaddress {
+        {{ keepalived_shared_ip }}/24 dev eth1
+    }
+    track_interface {
+      eth1
+    }
+    track_script {
+        chk_service
+    }
+}

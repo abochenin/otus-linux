@@ -1,0 +1,7 @@
+module(load="imfile" mode="inotify")
+input(type="imfile"
+      File="/var/log/mysqld.log"
+        Tag="mysqld:")
+
+module(load="omrelp")
+    :syslogtag, startswith, "mysqld" action(type="omrelp" target="192.168.34.102" port="514")

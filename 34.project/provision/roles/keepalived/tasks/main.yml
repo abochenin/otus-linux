@@ -1,0 +1,33 @@
+---
+- name: Install keepalived (Centos)
+  yum: name=keepalived state=present
+  when: ansible_os_family == "RedHat"
+  notify: restart keepalived
+
+- name: Set net.ipv4.ip_nonlocal_bind to 1
+  sysctl:
+    name: net.ipv4.ip_nonlocal_bind
+    value: '1'
+    state: present
+  tags: keep
+
+- name: Open multicast 224.0.0.18 for keepalived
+  firewalld:
+    rich_rule: rule family="ipv4" destination address="224.0.0.18" protocol value="ip" accept
+    zone: public
+    permanent: yes
+    state: enabled
+  notify: restart firewalld
+  tags: firewall
+
+- name: Copy /etc/keepalived/keepalived.conf
+  template: src=keepalived.conf.j2 dest=/etc/keepalived/keepalived.conf
+  notify: restart keepalived
+  tags: keep
+
+- name: Start keepalived
+  service: 
+    name: keepalived
+    state: started
+    enabled: yes
+  tags: keep

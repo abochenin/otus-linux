@@ -1,0 +1,3 @@
+---
+keepalived_shared_ip: "192.168.34.100"
+keepalived_check_process: "nginx"

@@ -1,0 +1,49 @@
+---
+- name: Install nginx
+  yum:
+    name: nginx
+    state: installed
+
+- name: Update /etc/nginx/nginx.conf
+  template:
+    src: etc/nginx/nginx.conf.j2
+    dest: /etc/nginx/nginx.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: reload nginx
+
+- name: Update /etc/nginx/conf.d/wp.conf
+  template:
+    src: etc/nginx/conf.d/wp.conf.j2
+    dest: /etc/nginx/conf.d/wp.conf
+    owner: root
+    group: root
+    mode: 0644
+  notify: reload nginx
+
+- name: Creates directory /var/www/html/wordpress
+  file:
+    path: /var/www/html/wordpress
+    state: directory
+    mode: 0755
+    owner: nginx
+    group: nginx
+
+- name: enable nginx
+  systemd:
+    name: nginx
+    enabled: yes
+
+- name: start nginx
+  systemd:
+    name: nginx
+    state: started
+
+- name: Open firewalld
+  firewalld:
+    service: http
+    zone: public
+    permanent: yes
+    state: enabled
+  notify: restart firewalld
